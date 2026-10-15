@@ -105,7 +105,11 @@ def main() -> int:
         "schema": 1,
         "generatedUtc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "registryValues": [],
+        # Values Chamber removes - retired tweaks deleted so an in-place upgrade
+        # cleans up after an earlier version. Verified absent, never restored.
+        "registryDeletes": [],
         "services": [],
+        "scheduledTasks": [],
         "bcd": {"flags": [], "timeout": None},
         "hostsEntries": [],
         "debloat": {"balanced": [], "xbox": []},
@@ -118,7 +122,12 @@ def main() -> int:
         for act in parse_actions(text):
             name, p = act["action"], act["props"]
             option = p.get("option")
-            if name == "registryValue":
+            if name == "registryValue" and p.get("operation", "").lower() == "delete":
+                if not all(k in p for k in ("path", "value")):
+                    manifest["unparsedActions"].append({"source": source, "action": name, "props": p})
+                    continue
+                manifest["registryDeletes"].append({"source": source, "path": p["path"], "value": p["value"]})
+            elif name == "registryValue":
                 if not all(k in p for k in ("path", "value", "type")):
                     manifest["unparsedActions"].append({"source": source, "action": name, "props": p})
                     continue
@@ -161,6 +170,11 @@ def main() -> int:
                     )
                 elif mt:
                     manifest["bcd"]["timeout"] = int(mt.group(1))
+            elif name == "scheduledTask" and p.get("operation", "").lower() in ("disable", "enable") and "path" in p:
+                entry = {"source": source, "path": p["path"], "state": p["operation"].lower()}
+                if option:
+                    entry["option"] = option
+                manifest["scheduledTasks"].append(entry)
             elif name in ("registryKey", "appx", "scheduledTask"):
                 manifest["unparsedActions"].append({"source": source, "action": name, "props": p})
 
@@ -182,8 +196,9 @@ def main() -> int:
 
     print(f"Wrote {OUT.relative_to(REPO)}")
     print(
-        f"  registry values: {len(manifest['registryValues'])} | "
+        f"  registry values: {len(manifest['registryValues'])} (+{len(manifest['registryDeletes'])} deletes) | "
         f"services: {len(manifest['services'])} | "
+        f"scheduled tasks: {len(manifest['scheduledTasks'])} | "
         f"BCD flags: {len(manifest['bcd']['flags'])} | "
         f"hosts entries: {len(manifest['hostsEntries'])} | "
         f"debloat: {len(manifest['debloat']['balanced'])} balanced + {len(manifest['debloat']['xbox'])} xbox | "

@@ -10,7 +10,6 @@ Drop your driver installer in this folder, or download:
 Chamber tips:
   - Custom install > uncheck GeForce Experience / NVIDIA App
     unless you need ShadowPlay
-  - After install, verify MSI mode + HAGS via START-HERE > Verify
   - "Nvidia Settings" folder: run the Import .bat files to apply
     the Chamber 3D / GSYNC+VSYNC / DLSS profiles via
     nvidiaProfileInspector

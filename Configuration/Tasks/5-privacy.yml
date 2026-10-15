@@ -1,6 +1,6 @@
 title: Privacy
 actions:
-  - !status: {status: 'Blocking telemetry at registry level'}
+  - !status: {status: 'Step 4 of 8: Reducing Windows telemetry'}
 
   - !registryValue:
       path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection'
@@ -50,7 +50,7 @@ actions:
       type: REG_DWORD
       data: '0'
 
-  - !status: {status: 'Disabling Windows Copilot via policy'}
+  - !status: {status: 'Step 4 of 8: Turning off Copilot'}
 
   - !registryValue:
       path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot'
@@ -64,7 +64,119 @@ actions:
       type: REG_DWORD
       data: '1'
 
-  - !status: {status: 'Blocking telemetry executables via IFEO'}
+  # 24H2, 25H2 and 26H2 share one servicing branch; 26H2 is an enablement
+  # package that switches on features already shipped in monthly updates. The
+  # values below cover those newer surfaces. Recall and Click to Do exist only
+  # on Copilot+ PCs; on other hardware the policies are inert.
+  - !status: {status: 'Step 4 of 8: Turning off Recall and Click to Do'}
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsAI'
+      value: 'DisableAIDataAnalysis'
+      type: REG_DWORD
+      data: '1'
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsAI'
+      value: 'DisableClickToDo'
+      type: REG_DWORD
+      data: '1'
+
+  - !status: {status: 'Step 4 of 8: Removing web results from Start'}
+
+  # Removes Bing web results from Start search. Side effect: File Explorer's
+  # search box also stops listing recent searches.
+  - !registryValue:
+      path: 'HKCU\Software\Policies\Microsoft\Windows\Explorer'
+      value: 'DisableSearchBoxSuggestions'
+      type: REG_DWORD
+      data: '1'
+
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'
+      value: 'Start_IrisRecommendations'
+      type: REG_DWORD
+      data: '0'
+
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'
+      value: 'Start_AccountNotifications'
+      type: REG_DWORD
+      data: '0'
+
+  - !status: {status: 'Step 4 of 8: Turning off tips, ads and suggested apps'}
+
+  # Suggested apps in Start, and silent installs of promoted apps.
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'
+      value: 'SystemPaneSuggestionsEnabled'
+      type: REG_DWORD
+      data: '0'
+
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'
+      value: 'SubscribedContent-338388Enabled'
+      type: REG_DWORD
+      data: '0'
+
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'
+      value: 'SilentInstalledAppsEnabled'
+      type: REG_DWORD
+      data: '0'
+
+  # Tips and "get even more out of Windows" prompts.
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'
+      value: 'SoftLandingEnabled'
+      type: REG_DWORD
+      data: '0'
+
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'
+      value: 'SubscribedContent-338389Enabled'
+      type: REG_DWORD
+      data: '0'
+
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'
+      value: 'SubscribedContent-310093Enabled'
+      type: REG_DWORD
+      data: '0'
+
+  # Suggested content in the Settings app.
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'
+      value: 'SubscribedContent-338393Enabled'
+      type: REG_DWORD
+      data: '0'
+
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'
+      value: 'SubscribedContent-353694Enabled'
+      type: REG_DWORD
+      data: '0'
+
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'
+      value: 'SubscribedContent-353696Enabled'
+      type: REG_DWORD
+      data: '0'
+
+  # Fun facts and tips over the lock screen picture.
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'
+      value: 'RotatingLockScreenOverlayEnabled'
+      type: REG_DWORD
+      data: '0'
+
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'
+      value: 'SubscribedContent-338387Enabled'
+      type: REG_DWORD
+      data: '0'
+
+  - !status: {status: 'Step 4 of 8: Blocking telemetry programs'}
 
   - !registryValue:
       path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\CompatTelRunner.exe'
@@ -84,13 +196,52 @@ actions:
       type: REG_SZ
       data: '%windir%\System32\taskkill.exe'
 
-  - !status: {status: 'Adding telemetry blocks to hosts file'}
+  - !status: {status: 'Step 4 of 8: Blocking telemetry servers'}
 
   - !cmd:
       exeDir: true
       command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Update-HostsTelemetryBlocks.ps1"'
       wait: true
+      errorAction: Log
 
   # Intentionally do not add Windows Firewall "domain block" rules here.
   # The older netsh version used remoteip=any, which can break all outbound traffic.
-  - !status: {status: 'Skipping Windows Firewall domain blocks to avoid internet breakage'}
+  # No status line for the skip: a progress screen saying "internet breakage"
+  # about something Chamber is deliberately not doing only alarms people.
+
+  - !status: {status: 'Step 4 of 8: Stopping background apps and update sharing'}
+
+  # Delivery Optimization defaults to peer-to-peer: the PC uploads Windows and
+  # Store update data to other PCs, at any time, including mid-match. 0 = HTTP
+  # only - updates still download from Microsoft, nothing is seeded to peers.
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization'
+      value: 'DODownloadMode'
+      type: REG_DWORD
+      data: '0'
+
+  # Force Deny for Store (UWP) apps running in the background. Win32 games,
+  # launchers and Discord are not Store apps and are unaffected; a Store app
+  # still runs normally while it is open. Side effect: Store apps such as Mail
+  # or Phone Link stop syncing and notifying while closed.
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy'
+      value: 'LetAppsRunInBackground'
+      type: REG_DWORD
+      data: '2'
+
+  # Edge keeps processes resident after its last window closes (background
+  # mode) and pre-launches them at sign-in (Startup Boost) - both whether or not
+  # Edge is the browser in use. Side effect: as with any Edge policy, edge://
+  # settings shows "Your browser is managed by your organization".
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Edge'
+      value: 'StartupBoostEnabled'
+      type: REG_DWORD
+      data: '0'
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Edge'
+      value: 'BackgroundModeEnabled'
+      type: REG_DWORD
+      data: '0'

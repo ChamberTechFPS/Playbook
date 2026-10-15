@@ -1,1 +1,1 @@
-nvidiaProfileInspector.exe Profile.nip
+"%~dp0nvidiaProfileInspector.exe" "%~dp0Profile.nip"

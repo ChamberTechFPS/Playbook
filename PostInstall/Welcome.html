@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Driver Setup</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f6f4f9;
+  --surface: #ffffff;
+  --border: #ddd6e6;
+  --fg: #15121a;
+  --muted: #4a4553;
+  --accent: #7a3fb5;
+  --accent-fill: #bb8be5;
+  --on-accent: #121212;
+  --code-bg: #ece7f3;
+  --font: Inter, "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121212;
+    --surface: #1b1b1d;
+    --border: #2e2e33;
+    --fg: #ffffff;
+    --muted: #c4c1ca;
+    --accent: #bb8be5;
+    --accent-fill: #bb8be5;
+    --on-accent: #121212;
+    --code-bg: #26262b;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.6;
+}
+main { max-width: 820px; margin: 0 auto; padding: 48px 16px 32px; }
+h1, h2, h3 { color: var(--fg); font-weight: 700; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(2rem, 6vw, 2.75rem); }
+h2 { font-size: 1.5rem; margin: 48px 0 16px; }
+h3 { font-size: 1.2rem; }
+.lead { font-size: 1.15rem; margin: 16px 0 0; }
+.mark { color: var(--accent); }
+ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 0; display: grid; gap: 16px; }
+ol.steps > li {
+  counter-reset: none;
+  counter-increment: s;
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 20px 20px 72px;
+}
+ol.steps > li::before {
+  content: counter(s);
+  position: absolute; left: 20px; top: 20px;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--accent-fill); color: var(--on-accent);
+  font-weight: 700; font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+}
+ol.steps p { margin: 8px 0 0; }
+.links { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
+a.btn {
+  display: inline-block; padding: 8px 16px; border-radius: 8px;
+  border: 1px solid var(--accent); color: var(--accent);
+  font-weight: 600; text-decoration: none;
+}
+a.btn:hover, a.btn:focus-visible { background: var(--accent-fill); color: var(--on-accent); }
+a { color: var(--accent); }
+.why { font-size: .95rem; }
+.box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px;
+}
+.box p { margin: 0 0 12px; }
+.box p:last-child { margin: 0; }
+code {
+  font-family: var(--mono); font-size: .92em;
+  background: var(--code-bg); color: var(--fg);
+  padding: 2px 6px; border-radius: 4px; overflow-wrap: anywhere;
+}
+ul { padding-left: 20px; margin: 0; }
+li + li { margin-top: 8px; }
+strong { color: var(--fg); }
+.done { color: var(--fg); font-weight: 600; margin: 24px 0 0; }
+details.support { margin-top: 40px; font-size: .9rem; }
+details.support summary { cursor: pointer; color: var(--muted); }
+details.support[open] summary { margin-bottom: 8px; }
+footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--border); font-size: .9rem; }
+@media (max-width: 480px) {
+  body { font-size: 16px; }
+  ol.steps > li { padding: 68px 16px 16px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Your PC is <span class="mark">ready.</span></h1>
+    <p class="lead">Windows is set up for gaming. All that's left is a few minutes of drivers.</p>
+  </header>
+
+  <h2>Your next steps</h2>
+  <ol class="steps">
+    <li>
+      <h3>Chipset driver first, then restart</h3>
+      <p>AMD: pick <strong>Chipsets</strong> on the page. Intel: let the support tool detect your PC.</p>
+      <div class="links">
+        <a class="btn" href="https://www.amd.com/en/support/download/drivers.html" target="_blank" rel="noopener">AMD chipset</a>
+        <a class="btn" href="https://www.intel.com/content/www/us/en/support/detect.html" target="_blank" rel="noopener">Intel detect tool</a>
+      </div>
+      <p class="why">Why: it controls CPU power management and core scheduling. This matters most on X3D and dual-CCD CPUs.</p>
+    </li>
+    <li>
+      <h3>Graphics driver</h3>
+      <p>Install the one for your card. For NVIDIA, <a href="https://www.techpowerup.com/nvcleanstall/" target="_blank" rel="noopener">NVCleanstall</a> gives you a lean install.</p>
+      <div class="links">
+        <a class="btn" href="https://www.nvidia.com/en-us/geforce/drivers/" target="_blank" rel="noopener">NVIDIA</a>
+        <a class="btn" href="https://www.amd.com/en/support/download/drivers.html" target="_blank" rel="noopener">AMD Radeon</a>
+      </div>
+      <p class="why">Optional, NVIDIA only: <code>C:\ChamberTech\PostInstall\Drivers\NVIDIA\Nvidia Settings</code> has Import <code>.bat</code> files. They apply ChamberTech's recommended NVIDIA settings.</p>
+    </li>
+    <li>
+      <h3>Network driver, only if your internet is missing or slow</h3>
+      <p>Not sure which you have? Try Intel first, then Realtek.</p>
+      <div class="links">
+        <a class="btn" href="https://www.intel.com/content/www/us/en/support/detect.html" target="_blank" rel="noopener">Intel</a>
+        <a class="btn" href="https://www.realtek.com/Download/List?cate_id=584" target="_blank" rel="noopener">Realtek</a>
+      </div>
+    </li>
+  </ol>
+  <p class="done">That's it. Restart once more after the graphics driver and you're done.</p>
+
+  <h2>Good to know</h2>
+  <ul>
+    <li>Secure Boot and TPM stay on. Anti-cheat like Vanguard, EAC and BattlEye needs them.</li>
+    <li>If Chrome or Brave was picked during setup, it's already installed. Microsoft Edge stays available either way.</li>
+    <li>This page won't open by itself again. The <strong>Driver Setup</strong> icon on your desktop brings it back.</li>
+    <li>Something not working? Contact ChamberTech.</li>
+  </ul>
+
+  <details class="support">
+    <summary>For ChamberTech support</summary>
+    <p>Support tools are in <code>C:\ChamberTech\PostInstall</code>. Right-click <code>START-HERE.bat</code> and choose <strong>Run as administrator</strong>:</p>
+    <ul>
+      <li><strong>[1]</strong> checks every setting. <strong>[2]</strong> also saves a <code>ChamberReport</code> zip on the Desktop to send to support.</li>
+      <li><strong>[5]</strong> previews an undo. <strong>[6]</strong> undoes the setup.</li>
+    </ul>
+    <p>Setup record: <code>C:\ChamberTech\deployment-receipt.json</code></p>
+  </details>
+
+  <footer>ChamberTech</footer>
+</main>
+</body>
+</html>

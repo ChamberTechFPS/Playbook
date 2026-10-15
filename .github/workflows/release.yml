@@ -15,6 +15,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Runs before packaging so a config AME Wizard would reject - or would
+      # silently leave out of its ISO injection picker - fails here rather than
+      # on a user's machine. It also carries the ISO staging gates: cached
+      # download sources and staging, <Software>-to-payload pairing, and the
+      # winget / shutdown / powerShell stage rules. Those failures do not show up
+      # at load time; they show up on a machine somebody has already booted.
+      #
+      # On a tag build it also asserts playbook.conf's <Version> matches the tag;
+      # v1.2.5 shipped declaring 1.2.4 without this.
+      - name: Validate playbook.conf and ISO injection config
+        run: |
+          if [ "${{ startsWith(github.ref, 'refs/tags/') }}" = "true" ]; then
+            python3 tools/validate_playbook_conf.py --expect-version "$GITHUB_REF_NAME"
+          else
+            python3 tools/validate_playbook_conf.py
+          fi
+
       - name: Install 7zip
         run: sudo apt-get update && sudo apt-get install -y p7zip-full
 
@@ -35,10 +52,44 @@ jobs:
       - name: Package .apbx
         run: |
           # AME Wizard expects playbook.conf at archive root — package contents,
-          # not the folder. Password 'malte' is the AME convention, not a secret.
-          7z a -p'malte' -mx=9 Chamber.7z \
-            playbook.conf playbook.png Configuration Executables PostInstall AGENTS.md
+          # not the folder. Images/ carries the OOBE software tile icons and AME
+          # throws while building that list if they are missing, so it ships too.
+          # Password 'malte' is the AME convention, not a secret; -mhe=on also
+          # encrypts the file list, matching AGENTS.md's local packaging command.
+          # Explicit list: repo docs, tools/ and CI files never ship.
+          7z a -p'malte' -mhe=on -mx=9 Chamber.7z \
+            playbook.conf playbook.png Configuration Executables Images PostInstall
           mv Chamber.7z Chamber.apbx
+
+      # AME reads playbook.conf from the archive root. If packaging ever picks up
+      # the containing folder instead of its contents, every path shifts by one
+      # and AME rejects the playbook with a message that does not say why. The
+      # named files are the ones whose absence fails at ISO-injection or first
+      # boot rather than at load, which is far too late to find out.
+      - name: Verify .apbx structure
+        run: |
+          7z l -p'malte' Chamber.apbx > /tmp/apbx-listing.txt
+          cat /tmp/apbx-listing.txt
+          missing=0
+          for required in \
+              playbook.conf \
+              Configuration/main.yml \
+              Configuration/Tasks/0-iso-cache.yml \
+              Configuration/Tasks/10-finalize.yml \
+              Executables/Install-CachedBrowser.ps1 \
+              Executables/Complete-ChamberSetup.ps1 \
+              Executables/Write-ChamberReceipt.ps1 \
+              Executables/Disable-BitLockerEncryption.ps1 \
+              Images/chrome.png \
+              Images/brave.png \
+              PostInstall/Welcome.html \
+              PostInstall/Verify/Verify-Chamber.ps1; do
+            if ! grep -qF "$required" /tmp/apbx-listing.txt; then
+              echo "::error::$required is missing from Chamber.apbx"
+              missing=1
+            fi
+          done
+          exit $missing
 
       - name: Generate checksums
         run: |

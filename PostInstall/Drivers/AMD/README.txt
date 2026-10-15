@@ -8,4 +8,3 @@ Chamber tips:
   - Choose "Driver Only" / minimal install if you don't use
     Adrenalin recording or overlays
   - Disable Adrenalin's in-game overlay for lowest input lag
-  - After install, run START-HERE > Verify

@@ -1,19 +1,21 @@
 ================================================================
-  CHAMBER - POST-INSTALL
+  CHAMBERTECH - SUPPORT TOOLS
 ================================================================
 
-Run this AFTER the playbook finishes and Windows reboots.
+If you are setting up this PC: you don't need anything in here.
+Open "Driver Setup" on the desktop - it lists the drivers to
+install, with download links.
 
-ORDER OF OPERATIONS
-  1. Drivers\Chipset  - install chipset drivers FIRST, reboot
-  2. Drivers\NVIDIA or Drivers\AMD - install your GPU driver
-  3. (Optional) Tools - DDU if you're coming from an old install
-  4. Run START-HERE.bat > Verify to confirm every tweak applied
+ORDER OF OPERATIONS (same as the Driver Setup page)
+  1. Chipset driver FIRST, then restart
+  2. Graphics driver (Drivers\NVIDIA or Drivers\AMD)
+  3. Network driver, only if internet is missing or slow
+  4. (Optional) Tools - DDU if you're coming from an old install
 
-Each folder has a README with official download links.
-Drop installers into these folders before going offline, or
-download them fresh - links inside.
-
-Questions or issues: run Verify, grab the ChamberReport zip
-from your Desktop, and send it to ChamberTech support.
+FOR CHAMBERTECH SUPPORT
+  Right-click START-HERE.bat > Run as administrator.
+    [1] Verify - checks every setting applied
+    [2] Verify + saves a ChamberReport zip on the Desktop
+    [5] Preview undo    [6] Undo the setup
+  Setup record: C:\ChamberTech\deployment-receipt.json
 ================================================================

@@ -4,7 +4,7 @@
 
 - **Every tweak must justify itself.** PRs adding tweaks need: what it changes, measurable effect (FPS, latency, process count — not "feels faster"), and any compatibility risk. Placebo tweaks get closed.
 - **Anti-cheat safety is non-negotiable.** Nothing that disables Secure Boot, patches system binaries, or touches anything kernel-level that Vanguard/EAC/BattlEye could flag.
-- **Test in a VM first.** Fresh Windows 11 install in VMware/Hyper-V, snapshot before applying, run the packaged .apbx through AME Wizard, then run the Post-Install verification (Step 4).
+- **Test in a VM first.** Fresh Windows 11 install in VMware/Hyper-V, snapshot before applying, run the packaged .apbx through AME Wizard, then run verification: `C:\ChamberTech\PostInstall\START-HERE.bat` as administrator, option 1.
 
 ## Workflow
 

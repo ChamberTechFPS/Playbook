@@ -1,6 +1,6 @@
 title: Services
 actions:
-  - !status: {status: 'Disabling telemetry and diagnostic services'}
+  - !status: {status: 'Step 2 of 8: Turning off telemetry services'}
 
   - !service:
       name: 'DiagTrack'
@@ -27,7 +27,7 @@ actions:
       operation: change
       startup: 4
 
-  - !status: {status: 'Disabling disk I/O heavy services'}
+  - !status: {status: 'Step 2 of 8: Turning off disk-heavy background services'}
 
   - !service:
       name: 'WSearch'
@@ -39,14 +39,14 @@ actions:
       operation: change
       startup: 4
 
-  - !status: {status: 'Disabling network bandwidth wasters'}
+  - !status: {status: 'Step 2 of 8: Turning off background network services'}
 
   - !service:
       name: 'WMPNetworkSvc'
       operation: change
       startup: 4
 
-  - !status: {status: 'Disabling irrelevant desktop services'}
+  - !status: {status: 'Step 2 of 8: Turning off services a gaming PC does not need'}
 
   - !service:
       name: 'TabletInputService'
@@ -112,3 +112,47 @@ actions:
       operation: change
       startup: 4
       option: 'remove-xbox'
+
+  - !status: {status: 'Step 2 of 8: Turning off telemetry scheduled tasks'}
+
+  # These wake on timers or idle triggers and do seconds-long bursts of CPU and
+  # disk work - application inventory scans, CEIP uploads, disk diagnostics. When
+  # one fires mid-match it lands in the 1% and 0.1% lows, not the average. All are
+  # telemetry or compatibility-data collectors; none is servicing or security. A
+  # task missing on a given build is skipped by AME (ProgramDataUpdater, for one,
+  # was removed in 24H2).
+  - !scheduledTask:
+      path: '\Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser'
+      operation: disable
+
+  - !scheduledTask:
+      path: '\Microsoft\Windows\Application Experience\ProgramDataUpdater'
+      operation: disable
+
+  - !scheduledTask:
+      path: '\Microsoft\Windows\Application Experience\PcaPatchDbTask'
+      operation: disable
+
+  - !scheduledTask:
+      path: '\Microsoft\Windows\Application Experience\MareBackup'
+      operation: disable
+
+  - !scheduledTask:
+      path: '\Microsoft\Windows\Customer Experience Improvement Program\Consolidator'
+      operation: disable
+
+  - !scheduledTask:
+      path: '\Microsoft\Windows\Customer Experience Improvement Program\UsbCeip'
+      operation: disable
+
+  - !scheduledTask:
+      path: '\Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector'
+      operation: disable
+
+  - !scheduledTask:
+      path: '\Microsoft\Windows\Feedback\Siuf\DmClient'
+      operation: disable
+
+  - !scheduledTask:
+      path: '\Microsoft\Windows\Feedback\Siuf\DmClientOnScenarioDownload'
+      operation: disable

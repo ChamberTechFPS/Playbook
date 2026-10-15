@@ -1,0 +1,26 @@
+title: Pre-Install Snapshot
+actions:
+  - !status: {status: 'Step 1 of 8: Saving your current settings so they can be restored'}
+
+  # Runs before any other phase so it records the machine as Windows shipped it.
+  #
+  # Restore-Chamber.ps1 reads the same verification-manifest.json the verifier
+  # uses, so the snapshot covers exactly the values this playbook is about to
+  # change - add a tweak to a task file, regenerate the manifest, and it becomes
+  # both verifiable and revertible with no extra work here.
+  #
+  # -PreInstall writes to the canonical pre-install path (no timestamp) so a
+  # later `Restore-Chamber.ps1 -Apply` finds it with no arguments and performs an
+  # exact restore instead of falling back to the Windows defaults table. The path
+  # is resolved inside the script rather than passed on the command line, so this
+  # does not depend on the shell expanding %ProgramData% first.
+  #
+  # errorAction: Log on purpose. A failed snapshot costs the user an exact
+  # restore, which is a real loss, but it is not a reason to abort provisioning -
+  # the defaults table still covers every value in the manifest.
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "..\PostInstall\Verify\Restore-Chamber.ps1" -Snapshot -PreInstall'
+      wait: true
+      errorAction: Log

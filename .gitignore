@@ -1,6 +1,14 @@
 # Internal working files - never publish
 _private/
 
+# Test-machine logs and local reference playbooks - evidence for a test run,
+# not source. Keep them under _private/ instead.
+GamingPC-Logs/
+compare/
+
+# Python bytecode from running tools/*.py
+__pycache__/
+
 # Built playbook archives belong in GitHub Releases, not the repo
 *.apbx
 files.zip
@@ -21,3 +29,8 @@ PostInstall/tools/*.zip
 
 # Local Claude Code settings - not part of the playbook
 .claude/
+
+# Browser installers AME caches into the image at ISO-injection time. Written by
+# Configuration/Tasks/0-iso-cache.yml on the machine building the ISO - vendor
+# binaries, several hundred MB, never source.
+Executables/Browsers/

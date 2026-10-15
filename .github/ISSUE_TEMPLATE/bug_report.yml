@@ -14,7 +14,8 @@ body:
     id: pbversion
     attributes:
       label: Chamber Playbook version
-      placeholder: "v1.0.0"
+      description: Shown in AME Wizard, and as chamberVersion in C:\ChamberTech\deployment-receipt.json
+      placeholder: "v1.3.0"
     validations:
       required: true
   - type: dropdown
@@ -22,8 +23,19 @@ body:
     attributes:
       label: Install type
       options:
-        - Fresh Windows install (as recommended)
+        - Fresh Windows install, run from AME Wizard (as recommended)
+        - Injected into a Windows ISO (applied during setup)
         - Existing/upgraded install
+    validations:
+      required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser chosen in AME Wizard
+      options:
+        - Google Chrome
+        - Brave
+        - None - kept Microsoft Edge
     validations:
       required: true
   - type: checkboxes
@@ -31,12 +43,13 @@ body:
     attributes:
       label: Options selected in AME Wizard
       options:
-        - label: Disable Windows Defender
-        - label: Disable VBS / HVCI
-        - label: Pause Windows Updates
-        - label: Remove Xbox Services
-        - label: Disable Game Bar / DVR
-        - label: OLED Safety
+        - label: Remove Xbox apps and services
+        - label: Turn off Game Bar overlay and recording
+        - label: OLED burn-in protection
+        - label: Turn off BitLocker / device encryption
+        - label: Turn off VBS and Memory Integrity
+        - label: Stop automatic Windows Updates
+        - label: Turn off Smart App Control
   - type: textarea
     id: description
     attributes:
@@ -49,6 +62,6 @@ body:
     attributes:
       label: Chamber verification report
       description: >
-        Open the Chamber Post-Install tool (START-HERE.bat), run verification,
+        Run C:\ChamberTech\PostInstall\START-HERE.bat as administrator, run verification,
         and attach the ChamberReport zip from your Desktop, or paste the
         summary here. Logs live in C:\ProgramData\ChamberPostInstall\logs.

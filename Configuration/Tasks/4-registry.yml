@@ -1,6 +1,6 @@
 title: Registry Tweaks
 actions:
-  - !status: {status: 'Applying MMCSS gaming priority'}
+  - !status: {status: 'Step 3 of 8: Giving games scheduling priority'}
 
   # MMCSS reserves this % of CPU for low-priority background work. Microsoft's
   # docs clamp any value below 10 back up to 20, so the common '0' tweak actually
@@ -12,9 +12,17 @@ actions:
       type: REG_DWORD
       data: '10'
 
-  # 'GPU Priority' (8) and 'Priority' (6) are not written here: both are already
-  # the Windows defaults for the MMCSS Games task, so setting them changed nothing
-  # and only inflated the tweak count the verifier reports.
+  # 'GPU Priority' (8) is not written here: it is already the Windows default for
+  # the MMCSS Games task. 'Priority' is NOT a default - stock Windows ships 2 (an
+  # earlier comment here claimed 6, and a Chamber-applied 25H2 machine still read
+  # 2 because nothing wrote it). 6 raises the thread priority MMCSS grants threads
+  # that register as "Games".
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games'
+      value: 'Priority'
+      type: REG_DWORD
+      data: '6'
+
   - !registryValue:
       path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games'
       value: 'Scheduling Category'
@@ -27,7 +35,7 @@ actions:
       type: REG_SZ
       data: 'High'
 
-  - !status: {status: 'Configuring CPU scheduler'}
+  - !status: {status: 'Step 3 of 8: Tuning the CPU scheduler'}
 
   - !registryValue:
       path: 'HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl'
@@ -35,21 +43,23 @@ actions:
       type: REG_DWORD
       data: '38'
 
-  - !status: {status: 'Optimizing memory management'}
+  - !status: {status: 'Step 3 of 8: Tuning memory management'}
 
   # Only disable paging of kernel executive code on systems with 8 GB+ RAM.
   # On low-RAM systems this can exhaust non-paged pool and cause BSODs.
   - !cmd:
       command: 'powershell -NoProfile -Command "$ram=(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory;if($ram -ge 8GB){Set-ItemProperty -Path ''HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management'' -Name DisablePagingExecutive -Value 1 -Type DWord;Write-Host ''DisablePagingExecutive enabled (sufficient RAM detected)''}else{Write-Host ''Skipping DisablePagingExecutive: less than 8 GB RAM - not safe to enable''}"'
       wait: true
+      errorAction: Log
 
-  - !registryValue:
-      path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management'
-      value: 'LargeSystemCache'
-      type: REG_DWORD
-      data: '0'
+  # LargeSystemCache=0 used to be written here. It is the Windows default, so it
+  # changed nothing; removed rather than counted as a tweak.
 
-  - !status: {status: 'Enabling hardware accelerated GPU scheduling'}
+  # GlobalTimerResolutionRequests=1 (system-wide timer resolution) was staged for
+  # 1.3.0 behind a benchmark gate. No CS2 / Fortnite run per docs/BENCHMARKING.md
+  # showed a win, so it was removed before tagging. Re-add only with results.
+
+  - !status: {status: 'Step 3 of 8: Turning on hardware-accelerated GPU scheduling'}
 
   - !registryValue:
       path: 'HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers'
@@ -57,7 +67,7 @@ actions:
       type: REG_DWORD
       data: '2'
 
-  - !status: {status: 'Disabling mouse acceleration'}
+  - !status: {status: 'Step 3 of 8: Turning off mouse acceleration'}
 
   - !registryValue:
       path: 'HKCU\Control Panel\Mouse'
@@ -77,7 +87,7 @@ actions:
       type: REG_SZ
       data: '0'
 
-  - !status: {status: 'Applying NTFS and shutdown optimizations'}
+  - !status: {status: 'Step 3 of 8: Tuning the file system and shutdown'}
 
   # fsutil (not a raw registry write) so NTFS is told immediately. We ask for
   # user-managed disabled (1), but Windows owns the system-managed bit
@@ -87,6 +97,7 @@ actions:
   - !cmd:
       command: 'fsutil behavior set disablelastaccess 1'
       wait: true
+      errorAction: Log
 
   - !registryValue:
       path: 'HKLM\SYSTEM\CurrentControlSet\Control'
@@ -112,7 +123,7 @@ actions:
       type: REG_SZ
       data: '1'
 
-  - !status: {status: 'Applying network latency optimizations'}
+  - !status: {status: 'Step 3 of 8: Tuning network latency'}
 
   # NetworkThrottlingIndex is an MMCSS value: it lives under Multimedia\SystemProfile
   # (next to SystemResponsiveness), NOT under Tcpip\Parameters where MMCSS never
@@ -123,37 +134,53 @@ actions:
       type: REG_DWORD
       data: '4294967295'
 
+  # Retired in 1.3.0, deleted so an upgrade from an earlier Chamber cleans up:
+  #   Tcpip\Parameters\TcpNoDelay - Windows does not read Nagle settings at this
+  #     level (only per interface), so it never did anything.
+  #   MSMQ\Parameters\TCPNoDelay - affects Message Queuing only.
+  #   AFD DefaultSendWindow / DefaultReceiveWindow - pins socket buffers to 64 KB,
+  #     which can cap throughput under receive-window autotuning.
+  # Game netcode is UDP, so none of these touched in-game latency.
   - !registryValue:
       path: 'HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters'
       value: 'TcpNoDelay'
-      type: REG_DWORD
-      data: '1'
+      operation: delete
 
   - !registryValue:
       path: 'HKLM\SOFTWARE\Microsoft\MSMQ\Parameters'
       value: 'TCPNoDelay'
-      type: REG_DWORD
-      data: '1'
+      operation: delete
 
   - !registryValue:
       path: 'HKLM\SYSTEM\CurrentControlSet\Services\AFD\Parameters'
       value: 'DefaultSendWindow'
-      type: REG_DWORD
-      data: '65536'
+      operation: delete
 
   - !registryValue:
       path: 'HKLM\SYSTEM\CurrentControlSet\Services\AFD\Parameters'
       value: 'DefaultReceiveWindow'
-      type: REG_DWORD
-      data: '65536'
+      operation: delete
 
-  - !status: {status: 'Disabling visual effects and animations'}
+  - !status: {status: 'Step 3 of 8: Turning off animations'}
 
   - !registryValue:
       path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects'
       value: 'VisualFXSetting'
       type: REG_DWORD
       data: '2'
+
+  # VisualFXSetting only moves the radio button in System Properties; the effects
+  # themselves live in this bitmask, and on its own the value above left them all
+  # on (verified on a Chamber-applied 25H2 machine: mask still the stock
+  # 9E1E078012000000). 9012038010000000 is what "Adjust for best performance"
+  # writes: no menu/tooltip fades, list smooth-scrolling or cursor shadow. Font
+  # smoothing (FontSmoothing) and thumbnails (IconsOnly) are separate values and
+  # are not affected.
+  - !registryValue:
+      path: 'HKCU\Control Panel\Desktop'
+      value: 'UserPreferencesMask'
+      type: REG_BINARY
+      data: '9012038010000000'
 
   - !registryValue:
       path: 'HKCU\Control Panel\Desktop'
@@ -173,13 +200,17 @@ actions:
       type: REG_DWORD
       data: '0'
 
+  # Retired in 1.3.0. MaintenanceDisabled also stopped scheduled SSD retrim and
+  # component-store cleanup, while Automatic Maintenance already waits for the
+  # user to be idle - so it cost real upkeep for no in-game gain. Deleted so an
+  # upgrade from an earlier Chamber hands maintenance back to Windows. The
+  # telemetry tasks that do spike mid-session are disabled in phase 3.
   - !registryValue:
       path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\Maintenance'
       value: 'MaintenanceDisabled'
-      type: REG_DWORD
-      data: '1'
+      operation: delete
 
-  - !status: {status: 'Disabling Game Bar overlay / DVR recording'}
+  - !status: {status: 'Step 3 of 8: Turning off Game Bar overlay and recording', option: 'disable-gamebar'}
 
   - !registryValue:
       path: 'HKCU\System\GameConfigStore'
@@ -209,7 +240,7 @@ actions:
       data: '0'
       option: 'disable-gamebar'
 
-  - !status: {status: 'Enforcing Windows Game Mode enabled'}
+  - !status: {status: 'Step 3 of 8: Making sure Game Mode is on'}
 
   # Game Mode is non-negotiable: these two values are deliberately NOT gated by
   # an option, and they are written after the Game Bar block so that selecting
@@ -228,3 +259,23 @@ actions:
       value: 'AutoGameModeEnabled'
       type: REG_DWORD
       data: '1'
+
+  - !status: {status: 'Step 3 of 8: Turning on optimizations for windowed games'}
+
+  # Flip-model presentation for DX10/11 games in windowed/borderless mode: lower
+  # present latency, and VRR and Auto HDR work in borderless. A script rather
+  # than a !registryValue because every DirectX per-user toggle shares one
+  # string value; the script merges this one key and keeps the user's others.
+  # HKCU, so it runs as the signed-in user like the classic context menu in 8.
+  #
+  # oobe: false - during an injected OOBE `currentUserElevated` is SYSTEM, so
+  # this would configure SYSTEM rather than the user (seen on the 26300 ISO
+  # test). There, Complete-ChamberSetup.ps1 -Mode User runs it at each user's
+  # first sign-in instead.
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Enable-WindowedGameOptimizations.ps1"'
+      wait: true
+      errorAction: Log
+      oobe: false

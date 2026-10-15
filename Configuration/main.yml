@@ -1,31 +1,72 @@
 title: Main
+# Progress text is numbered "Step N of 8: ..." and only ever counts up, so
+# someone watching the OOBE (or a tutorial video of it) always knows where the
+# run is and how much is left. Each task file sets its own Step-prefixed status
+# lines; the label here is what shows until that file's first one, and the only
+# one shown when every action in a step is gated on an unselected option.
+#
+# Steps map to task files without reordering them (PRD FR-027):
+#   1 Power and boot   0-snapshot, 1-power, 2-bcd
+#   2 Services         3-services
+#   3 Gaming settings  4-registry
+#   4 Privacy          5-privacy
+#   5 Clutter          6-debloat
+#   6 Security choices 7-security
+#   7 Look and network 8-configure-windows, 9-network
+#   8 Apps and finish  10-finalize
+# This replaces the PRD's five repeating stage names, which made the progress
+# text jump backwards on screen. validate_playbook_conf.py enforces the order.
 actions:
-  - !status: {status: 'Starting Chamber - Phase 1: Power Plan'}
-  - !task: {path: 'Tasks/1-power.yml'}
+  # Architecture guard. Chamber supports x64 Windows 11 only; on ARM64 the run
+  # stops here, before the snapshot or any phase has changed anything.
+  #
+  # The check reads the native architecture from the Session Manager Environment
+  # key rather than using `cpuArch: Arm64`. AME's cpuArch would also resolve
+  # natively (IsWow64Process2's host machine, so emulation does not fool it),
+  # but doing the test in the command keeps the guard self-contained: it has no
+  # filters for anyone to get wrong, and validate_playbook_conf.py can require
+  # that it carries none.
+  #
+  # No `iso:`, so AME skips it at injection (where there is no system to test)
+  # and runs it live - on the installed PC at first boot, or on a normal run.
+  # ARM64 ISOs are not stopped at injection: AME has no playbook-level
+  # architecture requirement, and !cmd cannot run there.
+  # No `option:`, and it must stay first: validate_playbook_conf.py enforces both.
+  - !cmd:
+      command: 'reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v PROCESSOR_ARCHITECTURE | find /i "ARM64" >nul && (echo Chamber supports x64 Windows 11 only. This PC is ARM64 - nothing was changed. & exit /b 1) || exit /b 0'
+      wait: true
+      handleExitCodes: {'1': Halt}
+      errorAction: Halt
 
-  - !status: {status: 'Phase 2: Boot Performance (BCD)'}
+  # Injection stage. `iso: only` keeps this off the live system entirely: it runs
+  # on the machine building the ISO and never during the OOBE or a normal run.
+  # It must stay ahead of the ten live phases so the payload is in the image
+  # before anything tries to install from it.
+  - !task: {path: 'Tasks/0-iso-cache.yml', iso: only}
+
+  - !status: {status: 'Step 1 of 8: Power and boot'}
+  - !task: {path: 'Tasks/0-snapshot.yml'}
+  - !task: {path: 'Tasks/1-power.yml'}
   - !task: {path: 'Tasks/2-bcd.yml'}
 
-  - !status: {status: 'Phase 3: Disabling Background Services'}
+  - !status: {status: 'Step 2 of 8: Background services'}
   - !task: {path: 'Tasks/3-services.yml'}
 
-  - !status: {status: 'Phase 4: Applying Chamber Registry Tweaks'}
+  - !status: {status: 'Step 3 of 8: Gaming settings'}
   - !task: {path: 'Tasks/4-registry.yml'}
 
-  - !status: {status: 'Phase 5: Privacy Configuration'}
+  - !status: {status: 'Step 4 of 8: Privacy'}
   - !task: {path: 'Tasks/5-privacy.yml'}
 
-  - !status: {status: 'Phase 6: Removing Bloatware'}
+  - !status: {status: 'Step 5 of 8: Removing clutter'}
   - !task: {path: 'Tasks/6-debloat.yml'}
 
-  - !status: {status: 'Phase 7: Security Configuration'}
+  - !status: {status: 'Step 6 of 8: Your security choices'}
   - !task: {path: 'Tasks/7-security.yml'}
 
-  - !status: {status: 'Phase 8: Windows UI Configuration'}
+  - !status: {status: 'Step 7 of 8: Windows look and network'}
   - !task: {path: 'Tasks/8-configure-windows.yml'}
-
-  - !status: {status: 'Phase 9: Network & Process Optimization'}
   - !task: {path: 'Tasks/9-network.yml'}
 
-  - !status: {status: 'Phase 10: Installing Programs & Finalizing'}
+  - !status: {status: 'Step 8 of 8: Installing your apps'}
   - !task: {path: 'Tasks/10-finalize.yml'}

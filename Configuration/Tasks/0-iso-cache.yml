@@ -1,0 +1,62 @@
+title: ISO Cache
+# The only task that runs at ISO injection time. Nothing here touches the live
+# system: AME downloads the selected browser installer on the machine building
+# the ISO and stores it inside the image, so first boot has a payload to install
+# from instead of reaching for winget and the network.
+#
+# main.yml includes this file with `iso: only`, and every action below repeats
+# `iso: only` / `oobe: false` rather than relying on that. AME checks staging on
+# the include and again on each action. !download defaults to `iso: true` with
+# `oobe` unset, which would also run it on every traditional drag-and-drop run.
+#
+# `destination:` is relative to the image's ProgramData\AME\OOBE\Playbook\
+# Executables, the copy of the playbook the first-boot run executes from.
+# AME skips a download whose destination already exists (no `overwrite:`), so
+# the payload must not ship inside the .apbx - see the packaging command.
+#
+# `option:` gates each download, so browser-skip caches nothing (PRD FR-022) and
+# a Chrome ISO never carries the Brave payload. `cpuArch: X64` is compared with
+# the ISO's architecture, so an ARM64 image caches nothing.
+#
+# `package:` links each download to its <Software> Package <Name> in
+# playbook.conf; AME's docs say the two "should ideally correspond", and the
+# validator requires it. Today that list is display-only in the OOBE.
+actions:
+  # Google Chrome Enterprise x64 MSI. The enterprise MSI is preferred over the
+  # consumer stub because msiexec gives a deterministic silent install with a
+  # real exit code, and the MSI is the whole browser rather than a downloader
+  # that would need the network again at first boot.
+  #
+  # UNVERIFIED (PRD open question 2): this URL, the resulting file type and the
+  # Authenticode signer string must all be confirmed against a real download
+  # before the offline milestone ships. Install-CachedBrowser.ps1 enforces the
+  # signer at install time, so a wrong file is skipped rather than executed.
+  - !download:
+      option: 'browser-chrome'
+      package: 'chrome'
+      url: 'https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise64.msi'
+      destination: 'Browsers\GoogleChromeStandaloneEnterprise64.msi'
+      cpuArch: X64
+      iso: only
+      oobe: false
+
+  # Brave standalone x64 installer, from Brave's own release channel.
+  #
+  # Naming is counter-intuitive and worth writing down: the UNSUFFIXED asset is
+  # the x64 build. `...Setup32.exe` is 32-bit and `...SetupArm64.exe` is ARM;
+  # there is no `...Setup64.exe`, and asking for one gets a 404 from GitHub -
+  # which during injection means an empty cache and no browser at first boot.
+  #
+  # The Silent variant is the same installer built to run unattended, which is
+  # exactly this case. The explicit flags below are belt-and-braces.
+  - !download:
+      option: 'browser-brave'
+      package: 'brave'
+      url: 'https://github.com/brave/brave-browser/releases/latest/download/BraveBrowserStandaloneSilentSetup.exe'
+      destination: 'Browsers\BraveBrowserStandaloneSilentSetup.exe'
+      cpuArch: X64
+      iso: only
+      oobe: false
+
+  # browser-skip has no action here by design. Nothing is downloaded, nothing is
+  # cached, and 10-finalize installs nothing for it.

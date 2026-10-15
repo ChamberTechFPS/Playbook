@@ -24,3 +24,31 @@ and optional tools are installed via winget and do NOT need
 to be placed here.
 
 ================================================================
+
+================================================================
+  Browsers/ — cached ISO payloads (do not populate by hand)
+================================================================
+
+During ISO injection, Configuration/Tasks/0-iso-cache.yml has AME
+download the selected browser installer into:
+
+    Executables/Browsers/
+
+That happens on the machine building the ISO, and the file ends up
+inside the image. At first boot, Install-CachedBrowser.ps1 checks
+the file is present and carries a valid Authenticode signature from
+the expected vendor, then installs it silently — so an injected
+install needs no internet for the browser.
+
+Nothing goes in this folder in source control, and nothing needs to
+be placed here before packaging. It is git-ignored, AME creates it,
+and a traditional (drag-and-drop) run never uses it — that path
+still installs the browser through winget.
+
+If the cached file is missing, truncated, or signed by anyone other
+than the expected vendor, the install is SKIPPED rather than
+attempted. The outcome is written to the Chamber deployment receipt
+at C:\ChamberTech\deployment-receipt.json, and Chamber Verify
+reports it. Edge remains available either way.
+
+================================================================

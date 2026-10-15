@@ -1,6 +1,6 @@
 title: Configure Windows
 actions:
-  - !status: {status: 'Configuring clean taskbar'}
+  - !status: {status: 'Step 7 of 8: Cleaning up the taskbar'}
 
   - !registryValue:
       path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'
@@ -32,26 +32,33 @@ actions:
       type: REG_DWORD
       data: '0'
 
-  - !status: {status: 'Applying OLED safety options if selected'}
+  - !status: {status: 'Step 7 of 8: Applying OLED burn-in protection', option: 'oled-safety'}
 
   - !cmd:
       command: 'powercfg -change -monitor-timeout-ac 5'
       wait: true
+      errorAction: Log
       option: 'oled-safety'
 
   - !cmd:
       command: 'powercfg -change -monitor-timeout-dc 5'
       wait: true
+      errorAction: Log
       option: 'oled-safety'
 
+  # Taskbar auto-hide needs Explorer's taskbar window, which does not exist
+  # during an injected OOBE - the script exits 1 there. oobe: false, and
+  # Complete-ChamberSetup.ps1 -Mode User runs it at each user's first sign-in.
   - !cmd:
       exeDir: true
       runas: currentUserElevated
       command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Enable-OledSafety.ps1"'
       wait: true
+      errorAction: Log
       option: 'oled-safety'
+      oobe: false
 
-  - !status: {status: 'Configuring File Explorer'}
+  - !status: {status: 'Step 7 of 8: Setting up File Explorer'}
 
   - !registryValue:
       path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'
@@ -71,13 +78,17 @@ actions:
       type: REG_DWORD
       data: '1'
 
-  - !status: {status: 'Enabling classic context menu'}
+  - !status: {status: 'Step 7 of 8: Restoring the classic right-click menu'}
 
+  # oobe: false - during an injected OOBE `currentUserElevated` is SYSTEM, so
+  # this would write SYSTEM's HKCU. Complete-ChamberSetup.ps1 -Mode User sets
+  # the same key at each user's first sign-in instead.
   - !cmd:
       runas: currentUserElevated
       command: 'reg.exe add "HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32" /ve /f'
       wait: true
-      errorAction: Notify
+      errorAction: Log
+      oobe: false
 
   - !registryValue:
       path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Personalization'
@@ -85,7 +96,7 @@ actions:
       type: REG_DWORD
       data: '1'
 
-  - !status: {status: 'Disabling accessibility key prompts'}
+  - !status: {status: 'Step 7 of 8: Turning off accessibility shortcut pop-ups'}
 
   - !registryValue:
       path: 'HKCU\Control Panel\Accessibility\StickyKeys'
@@ -105,7 +116,7 @@ actions:
       type: REG_SZ
       data: '122'
 
-  - !status: {status: 'Setting dark mode'}
+  - !status: {status: 'Step 7 of 8: Turning on dark mode'}
 
   - !registryValue:
       path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
@@ -116,6 +127,17 @@ actions:
   - !registryValue:
       path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
       value: 'SystemUsesLightTheme'
+      type: REG_DWORD
+      data: '0'
+
+  # Transparency (the acrylic/Mica blur behind menus, the taskbar, and Settings)
+  # is DWM compositor work on every redraw of those surfaces. Off by default: it
+  # costs frames for a purely cosmetic effect, and it is the one Personalize
+  # value VisualFXSetting in phase 4 does not cover. Users who want it back can
+  # flip it in Settings > Personalization > Colors > Transparency effects.
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
+      value: 'EnableTransparency'
       type: REG_DWORD
       data: '0'
 

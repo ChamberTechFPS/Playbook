@@ -1,15 +1,25 @@
 title: Debloat
 actions:
-  - !status: {status: 'Removing balanced Windows inbox bloat'}
+  - !status: {status: 'Step 5 of 8: Removing preinstalled clutter apps'}
 
   - !cmd:
       exeDir: true
       runas: currentUserElevated
       command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Invoke-BalancedDebloat.ps1"'
       wait: true
-      errorAction: Notify
+      errorAction: Log
 
-  - !status: {status: 'Removing Xbox apps if selected'}
+  # OneDrive installs itself per user, at each account's first sign-in, from this
+  # Run value in the Default profile. During an injected OOBE no user exists yet
+  # and the script above runs as SYSTEM, so there is nothing for it to uninstall;
+  # deleting the value here is what keeps OneDrive off the accounts created later.
+  # AME applies HKCU actions to the Default profile as well as existing users.
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Run'
+      value: 'OneDriveSetup'
+      operation: delete
+
+  - !status: {status: 'Step 5 of 8: Removing Xbox apps', option: 'remove-xbox'}
 
   - !cmd:
       exeDir: true
@@ -17,4 +27,4 @@ actions:
       command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Invoke-BalancedDebloat.ps1" -XboxOnly'
       wait: true
       option: 'remove-xbox'
-      errorAction: Notify
+      errorAction: Log

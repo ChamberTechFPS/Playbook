@@ -1,6 +1,6 @@
 title: Security
 actions:
-  - !status: {status: 'Disabling VBS / HVCI if selected'}
+  - !status: {status: 'Step 6 of 8: Turning off VBS and Memory Integrity', option: 'disable-vbs'}
 
   - !registryValue:
       path: 'HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard'
@@ -23,7 +23,7 @@ actions:
       data: '0'
       option: 'disable-vbs'
 
-  - !status: {status: 'Disabling Smart App Control if selected'}
+  - !status: {status: 'Step 6 of 8: Turning off Smart App Control', option: 'disable-sac'}
 
   - !registryValue:
       path: 'HKLM\SYSTEM\CurrentControlSet\Control\CI\Policy'
@@ -32,43 +32,28 @@ actions:
       data: '0'
       option: 'disable-sac'
 
-  - !status: {status: 'Disabling Windows Defender if selected'}
-
+  # The "Turn off Microsoft Defender" option was removed in 1.3.0. Windows
+  # ignores these policies while Tamper Protection is on, and it is always on
+  # after a fresh install - the 26300 ISO test selected the option and Defender
+  # kept running. Defender now stays on; Verify suggests game-folder
+  # exclusions instead. These deletes clean up after older Chamber versions on
+  # an in-place upgrade, so Windows Security stops reporting the PC as managed.
   - !registryValue:
       path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows Defender'
       value: 'DisableAntiSpyware'
-      type: REG_DWORD
-      data: '1'
-      option: 'remove-defender'
+      operation: delete
 
   - !registryValue:
       path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection'
       value: 'DisableRealtimeMonitoring'
-      type: REG_DWORD
-      data: '1'
-      option: 'remove-defender'
+      operation: delete
 
-  - !service:
-      name: 'WinDefend'
-      operation: stop
-      option: 'remove-defender'
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\Windows Defender'
+      value: 'DisableAntiVirus'
+      operation: delete
 
-  - !service:
-      name: 'WdNisSvc'
-      operation: stop
-      option: 'remove-defender'
-
-  - !service:
-      name: 'SecurityHealthService'
-      operation: stop
-      option: 'remove-defender'
-
-  - !cmd:
-      command: 'reg add "HKLM\SOFTWARE\Microsoft\Windows Defender" /v "DisableAntiVirus" /t REG_DWORD /d 1 /f'
-      wait: true
-      option: 'remove-defender'
-
-  - !status: {status: 'Configuring Windows Update policy if selected'}
+  - !status: {status: 'Step 6 of 8: Switching Windows Update to notify-only', option: 'disable-updates'}
 
   # Notify-only: no background downloads/installs, but Store and Xbox still
   # use the update/download stack. wuauserv and UsoSvc intentionally left at
@@ -86,3 +71,31 @@ actions:
       type: REG_DWORD
       data: '2'
       option: 'disable-updates'
+
+  - !status: {status: 'Step 6 of 8: Turning off drive encryption', option: 'disable-bitlocker'}
+
+  # Stops Windows 11 24H2+ ever starting automatic device encryption. This is the
+  # half that matters most: preventing encryption costs nothing, while decrypting
+  # a drive that already encrypted takes real time.
+  #
+  # A Chamber ISO install never reaches this state anyway - <DisableBitLocker> in
+  # playbook.conf keeps setup from encrypting in the first place. This option is
+  # what covers a traditional drag-and-drop run on a machine Windows already
+  # encrypted.
+  - !registryValue:
+      path: 'HKLM\SYSTEM\CurrentControlSet\Control\BitLocker'
+      value: 'PreventDeviceEncryption'
+      type: REG_DWORD
+      data: '1'
+      option: 'disable-bitlocker'
+
+  # And the other half: decrypt the system drive if encryption already started.
+  # The script starts decryption and returns - Windows finishes in the
+  # background - so this never stalls an unattended OOBE on a large volume.
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Disable-BitLockerEncryption.ps1"'
+      wait: true
+      errorAction: Log
+      option: 'disable-bitlocker'

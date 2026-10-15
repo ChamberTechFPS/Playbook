@@ -156,37 +156,56 @@ function Remove-AppxTarget {
 function Remove-OneDrive {
     # OneDrive is a win32 app, not an appx package, so it needs its uninstaller.
     # Exit codes from the uninstallers are unreliable; success is judged by the
-    # per-user install disappearing.
-    $installedExe = Join-Path $env:LOCALAPPDATA 'Microsoft\OneDrive\OneDrive.exe'
+    # install disappearing.
+    #
+    # Two install locations: per user under LOCALAPPDATA (the usual case) and
+    # machine-wide under Program Files (/allusers). During an injected OOBE this
+    # runs as SYSTEM before any user exists, so the per-user path is SYSTEM's own
+    # and is empty; 6-debloat.yml deletes the Default profile's OneDriveSetup Run
+    # value so later accounts never install it.
+    $perUserExe = Join-Path $env:LOCALAPPDATA 'Microsoft\OneDrive\OneDrive.exe'
+    $machineExe = Join-Path $env:ProgramFiles 'Microsoft OneDrive\OneDrive.exe'
 
     Write-DebloatLog 'Target group: OneDrive'
 
-    if (-not (Test-Path -LiteralPath $installedExe)) {
-        Write-DebloatLog 'Not present: OneDrive'
+    $installs = @(
+        @{ Exe = $perUserExe; Args = '/uninstall' }
+        @{ Exe = $machineExe; Args = '/uninstall /allusers' }
+    ) | Where-Object { Test-Path -LiteralPath $_.Exe }
+
+    if (@($installs).Count -eq 0) {
+        if ([Security.Principal.WindowsIdentity]::GetCurrent().IsSystem) {
+            Write-DebloatLog 'Not present: OneDrive (running as SYSTEM - new accounts are kept from installing it by the Default profile Run value delete)'
+        } else {
+            Write-DebloatLog 'Not present: OneDrive'
+        }
         return
     }
 
     Stop-Process -Name 'OneDrive' -Force -ErrorAction SilentlyContinue
 
-    $uninstallers = @(
+    $setupExes = @(
         (Join-Path $env:SystemRoot 'System32\OneDriveSetup.exe'),
-        (Join-Path $env:SystemRoot 'SysWOW64\OneDriveSetup.exe'),
-        $installedExe
+        (Join-Path $env:SystemRoot 'SysWOW64\OneDriveSetup.exe')
     )
 
-    foreach ($exe in $uninstallers) {
-        if (-not (Test-Path -LiteralPath $exe)) { continue }
-        try {
-            $proc = Start-Process -FilePath $exe -ArgumentList '/uninstall' -PassThru -Wait -ErrorAction Stop
-            Write-DebloatLog "Ran OneDrive uninstaller: $exe (exit $($proc.ExitCode))"
-        } catch {
-            Write-DebloatLog "OneDrive uninstaller failed at $exe`: $($_.Exception.Message)" -Level WARN
-            continue
+    foreach ($install in $installs) {
+        foreach ($exe in ($setupExes + $install.Exe)) {
+            if (-not (Test-Path -LiteralPath $exe)) { continue }
+            try {
+                $proc = Start-Process -FilePath $exe -ArgumentList $install.Args -PassThru -Wait -ErrorAction Stop
+                Write-DebloatLog "Ran OneDrive uninstaller: $exe $($install.Args) (exit $($proc.ExitCode))"
+            } catch {
+                Write-DebloatLog "OneDrive uninstaller failed at $exe`: $($_.Exception.Message)" -Level WARN
+                continue
+            }
+            if (-not (Test-Path -LiteralPath $install.Exe)) { break }
         }
-        if (-not (Test-Path -LiteralPath $installedExe)) {
-            Write-DebloatLog 'OneDrive removed.'
-            return
-        }
+    }
+
+    if (@($installs | Where-Object { Test-Path -LiteralPath $_.Exe }).Count -eq 0) {
+        Write-DebloatLog 'OneDrive removed.'
+        return
     }
 
     Write-DebloatLog 'OneDrive still installed after uninstall attempts.' -Level WARN
@@ -204,7 +223,7 @@ $scopeLabel = if ($XboxOnly) { 'Xbox optional cleanup' } else { 'balanced inbox 
 
 Write-DebloatLog "Starting Chamber $scopeLabel."
 Write-DebloatLog "Log path: $LogPath"
-Write-DebloatLog 'Preserved by default: Store, App Installer/winget, Windows Security, Calculator, Notepad, Snipping Tool, Photos, Paint, Quick Assist, and Xbox/Game Pass unless selected.'
+Write-DebloatLog 'Preserved by default: Store, App Installer/winget, Windows Security, Calculator, Notepad, Snipping Tool, Photos, Paint, and Xbox/Game Pass unless selected.'
 
 foreach ($target in $targets) {
     Write-DebloatLog "Target group: $($target.DisplayName)"

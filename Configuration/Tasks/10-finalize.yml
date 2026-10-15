@@ -1,6 +1,24 @@
 title: Finalize
+# Stage boundaries matter more in this file than anywhere else, because it is the
+# only phase whose work differs between a traditional run and an injected OOBE.
+#
+#   oobe: false   traditional drag-and-drop run only (winget, the connectivity
+#                 probe, the explicit restart)
+#   oobe: only    injected OOBE only (installing the payload cached at injection)
+#   unannotated   both
+#
+# No action here is `iso: true` or `iso: only`, and none may be. !cmd, !run and
+# !powerShell fail IsISOCompatible() outright and abort playbook parsing - see
+# the comment above <SupportsISO> in playbook.conf.
 actions:
-  - !status: {status: 'Installing Post-Install Companion to C:\ChamberTech'}
+  - !status: {status: 'Step 8 of 8: Adding the Driver Setup shortcut'}
+
+  # Copies PostInstall to C:\ChamberTech, puts a "Driver Setup" shortcut to
+  # Welcome.html on the Public Desktop, and arranges for each user's next sign-in to run
+  # Complete-ChamberSetup.ps1 -Mode User and then open Welcome.html. Everything
+  # is machine-wide because at OOBE time the user's own profile may not exist
+  # yet. The ProgressText in playbook.conf promises this page; the validator
+  # checks the page ships and this script still schedules it.
 
   - !cmd:
       exeDir: true
@@ -9,56 +27,253 @@ actions:
       wait: true
       errorAction: Log
 
-  - !status: {status: 'Installing DirectX and Visual C++ Redistributables'}
+  # Injected OOBE only: Windows resets some HKLM telemetry values and scheduled
+  # tasks after this run (Diagtrack-Listener, PcaPatchDbTask on the 26300 ISO
+  # test). This registers a one-shot SYSTEM task that re-applies the manifest's
+  # HKLM values and task states at the first sign-in, then deletes itself.
+  # Must run after Install-PostInstallCompanion.ps1, which copies the script to
+  # C:\ChamberTech\Setup. A traditional run applies everything live and needs
+  # no second pass.
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Complete-ChamberSetup.ps1" -Mode Schedule'
+      wait: true
+      errorAction: Log
+      iso: false
+      oobe: only
+
+  - !status: {status: 'Step 8 of 8: Installing DirectX and Visual C++ runtimes'}
 
   - !cmd:
       exeDir: true
       runas: currentUserElevated
       command: 'if exist "DirectX\DXSETUP.exe" (start /wait "" "DirectX\DXSETUP.exe" /silent) else (echo DirectX not found - skipping)'
       wait: true
-      errorAction: Notify
+      errorAction: Log
 
   - !cmd:
       exeDir: true
       runas: currentUserElevated
       command: 'if exist "vcredist_all.exe" (start /wait "" "vcredist_all.exe" /silent) else (echo VC++ Redist not found - skipping)'
       wait: true
-      errorAction: Notify
+      errorAction: Log
 
-  - !status: {status: 'Checking prerequisites for app installs'}
+  # --- Deployment receipt: start -------------------------------------------
+  # Opened before the browser work so the browser outcome has somewhere to land.
+  # Two mutually exclusive actions rather than one, because the install mode is
+  # the one fact the script cannot determine for itself - AME's staging is what
+  # knows, and this is how it says so.
+  - !status: {status: 'Step 8 of 8: Recording what was applied'}
 
-  # Verify winget is available
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Write-ChamberReceipt.ps1" -Init -Mode ISO-OOBE'
+      wait: true
+      errorAction: Log
+      iso: false
+      oobe: only
+
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Write-ChamberReceipt.ps1" -Init -Mode Traditional'
+      wait: true
+      errorAction: Log
+      iso: false
+      oobe: false
+
+  # --- Deployment receipt: selected options --------------------------------
+  # One action per option, each gated on that option. It reads as repetition,
+  # and the repetition is the point: AME only runs an action whose `option:` was
+  # selected, so an entry in the receipt is proof of a selection rather than an
+  # inference from system state. PRD FR-034 is explicit that an option must not
+  # be inferred from a failed setting check - that is exactly the ambiguity
+  # support cannot resolve today.
+  #
+  # The browser is deliberately absent here; it is recorded with its install
+  # result further down, by Install-CachedBrowser.ps1 or by the winget path.
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Write-ChamberReceipt.ps1" -AddOption disable-vbs'
+      option: 'disable-vbs'
+      wait: true
+      errorAction: Log
+
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Write-ChamberReceipt.ps1" -AddOption disable-updates'
+      option: 'disable-updates'
+      wait: true
+      errorAction: Log
+
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Write-ChamberReceipt.ps1" -AddOption disable-sac'
+      option: 'disable-sac'
+      wait: true
+      errorAction: Log
+
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Write-ChamberReceipt.ps1" -AddOption remove-xbox'
+      option: 'remove-xbox'
+      wait: true
+      errorAction: Log
+
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Write-ChamberReceipt.ps1" -AddOption disable-gamebar'
+      option: 'disable-gamebar'
+      wait: true
+      errorAction: Log
+
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Write-ChamberReceipt.ps1" -AddOption oled-safety'
+      option: 'oled-safety'
+      wait: true
+      errorAction: Log
+
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Write-ChamberReceipt.ps1" -AddOption disable-bitlocker'
+      option: 'disable-bitlocker'
+      wait: true
+      errorAction: Log
+
+  # --- Browser: injected OOBE path -----------------------------------------
+  # Installs the payload Tasks/0-iso-cache.yml cached into the image. No network,
+  # no winget. The script checks the file is present and vendor-signed before it
+  # runs anything, and always exits 0 - see its header for why.
+  - !status: {status: 'Step 8 of 8: Setting up your browser'}
+
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Install-CachedBrowser.ps1" -Browser Chrome'
+      option: 'browser-chrome'
+      wait: true
+      errorAction: Log
+      iso: false
+      oobe: only
+
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Install-CachedBrowser.ps1" -Browser Brave'
+      option: 'browser-brave'
+      wait: true
+      errorAction: Log
+      iso: false
+      oobe: only
+
+  # --- Browser: traditional run path ---------------------------------------
+  # winget only, and only outside an injected OOBE. Marking these `oobe: false`
+  # is what stops two installers racing for the same browser at first boot, and
+  # it is why the injected path needs no network.
+  - !status: {status: 'Step 8 of 8: Checking winget and internet', oobe: false}
+
   - !cmd:
       command: 'winget --version || echo [WARN] winget not found - app installs will be skipped'
       wait: true
       errorAction: Log
+      oobe: false
 
-  # Warn if no internet — winget installs will fail silently without this
+  # Warn if no internet - winget installs will fail silently without this
   - !cmd:
       command: 'powershell -NoProfile -Command "if(Test-Connection 8.8.8.8 -Count 1 -Quiet){Write-Host ''Internet connectivity verified.''}else{Write-Host ''WARNING: No internet connection detected. App installs may fail or be skipped.'' -ForegroundColor Yellow}"'
       wait: true
       errorAction: Log
+      oobe: false
 
-  - !status: {status: 'Installing browser'}
+  - !status: {status: 'Step 8 of 8: Installing your browser', oobe: false}
 
+  # errorAction is Log rather than Notify because a browser is optional and a
+  # halted run is not: Notify waits for a click, and nobody may be watching.
   - !run:
       exe: 'winget'
       args: 'install -e --id Google.Chrome --source winget --silent --accept-package-agreements --accept-source-agreements'
       runas: currentUserElevated
       option: 'browser-chrome'
-      errorAction: Notify
+      errorAction: Log
+      iso: false
+      oobe: false
 
   - !run:
       exe: 'winget'
       args: 'install -e --id Brave.Brave --source winget --silent --accept-package-agreements --accept-source-agreements'
       runas: currentUserElevated
       option: 'browser-brave'
-      errorAction: Notify
+      errorAction: Log
+      iso: false
+      oobe: false
 
-  - !status: {status: 'Chamber setup complete - restarting'}
+  # winget reports its own result to the console but not to the receipt, and
+  # there is no post-action hook to read its exit code from. Recording the
+  # attempt keeps the traditional-run receipt honest: "winget was asked to do
+  # this", which Verify-Chamber then confirms or contradicts against the
+  # browser actually installed. Only the injected path can claim an outcome
+  # outright, because there a script watched the installer exit.
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Write-ChamberReceipt.ps1" -SetBrowser browser-chrome -Result Installed -Detail "requested via winget"'
+      option: 'browser-chrome'
+      wait: true
+      errorAction: Log
+      oobe: false
 
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Write-ChamberReceipt.ps1" -SetBrowser browser-brave -Result Installed -Detail "requested via winget"'
+      option: 'browser-brave'
+      wait: true
+      errorAction: Log
+      oobe: false
+
+  # browser-skip installs nothing on either path, but the receipt still has to
+  # say so - "no browser was requested" and "the browser failed" must not look
+  # the same to support.
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Write-ChamberReceipt.ps1" -SetBrowser browser-skip -Result Skipped -Detail "kept the existing browser"'
+      option: 'browser-skip'
+      wait: true
+      errorAction: Log
+
+  # --- Deployment receipt: close -------------------------------------------
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Write-ChamberReceipt.ps1" -Complete'
+      wait: true
+      errorAction: Log
+
+  - !status: {status: 'Step 8 of 8: ChamberTech setup complete'}
+
+  # oobe: false is the one annotation the restart needs. On a normal run this
+  # reboot is what applies the BCD, service, and VBS changes. During an injected
+  # OOBE, AME owns the restart sequence and hands off to Windows itself -
+  # issuing our own shutdown mid-OOBE would cut that short before AME commits its
+  # completion state and logs. The reboot still happens, under AME's control.
+  #
+  # PRD FR-031: if VM testing shows AME does not perform the final transition, an
+  # OOBE-only restart goes here - but only after the AME log is complete, and
+  # with the reason and the failure path recorded.
   - !cmd:
       command: '%SystemRoot%\System32\shutdown.exe /r /t 30 /c "Chamber setup complete. Restarting to apply all changes..."'
       runas: currentUserElevated
       wait: true
-      errorAction: Notify
+      errorAction: Log
+      oobe: false

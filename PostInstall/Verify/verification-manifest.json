@@ -1,28 +1,7 @@
 {
   "schema": 1,
-  "generatedUtc": "2026-08-05T21:34:31Z",
+  "generatedUtc": "2026-10-15T01:09:46Z",
   "registryValues": [
-    {
-      "source": "1-power.yml",
-      "path": "HKLM\\SYSTEM\\CurrentControlSet\\Services\\USB",
-      "value": "DisableSelectiveSuspend",
-      "type": "REG_DWORD",
-      "data": "1"
-    },
-    {
-      "source": "1-power.yml",
-      "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerSettings\\54533251-82be-4824-96c1-47b60b740d00\\0cc5b647-c1df-4637-891a-dec35c318583\\DefaultPowerSchemeValues\\11111111-1111-1111-1111-111111111111",
-      "value": "ValueMax",
-      "type": "REG_DWORD",
-      "data": "100"
-    },
-    {
-      "source": "1-power.yml",
-      "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerSettings\\54533251-82be-4824-96c1-47b60b740d00\\0cc5b647-c1df-4637-891a-dec35c318583\\DefaultPowerSchemeValues\\11111111-1111-1111-1111-111111111111",
-      "value": "ValueMin",
-      "type": "REG_DWORD",
-      "data": "100"
-    },
     {
       "source": "1-power.yml",
       "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerThrottling",
@@ -36,6 +15,13 @@
       "value": "SystemResponsiveness",
       "type": "REG_DWORD",
       "data": "10"
+    },
+    {
+      "source": "4-registry.yml",
+      "path": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games",
+      "value": "Priority",
+      "type": "REG_DWORD",
+      "data": "6"
     },
     {
       "source": "4-registry.yml",
@@ -57,13 +43,6 @@
       "value": "Win32PrioritySeparation",
       "type": "REG_DWORD",
       "data": "38"
-    },
-    {
-      "source": "4-registry.yml",
-      "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management",
-      "value": "LargeSystemCache",
-      "type": "REG_DWORD",
-      "data": "0"
     },
     {
       "source": "4-registry.yml",
@@ -137,38 +116,17 @@
     },
     {
       "source": "4-registry.yml",
-      "path": "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
-      "value": "TcpNoDelay",
-      "type": "REG_DWORD",
-      "data": "1"
-    },
-    {
-      "source": "4-registry.yml",
-      "path": "HKLM\\SOFTWARE\\Microsoft\\MSMQ\\Parameters",
-      "value": "TCPNoDelay",
-      "type": "REG_DWORD",
-      "data": "1"
-    },
-    {
-      "source": "4-registry.yml",
-      "path": "HKLM\\SYSTEM\\CurrentControlSet\\Services\\AFD\\Parameters",
-      "value": "DefaultSendWindow",
-      "type": "REG_DWORD",
-      "data": "65536"
-    },
-    {
-      "source": "4-registry.yml",
-      "path": "HKLM\\SYSTEM\\CurrentControlSet\\Services\\AFD\\Parameters",
-      "value": "DefaultReceiveWindow",
-      "type": "REG_DWORD",
-      "data": "65536"
-    },
-    {
-      "source": "4-registry.yml",
       "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects",
       "value": "VisualFXSetting",
       "type": "REG_DWORD",
       "data": "2"
+    },
+    {
+      "source": "4-registry.yml",
+      "path": "HKCU\\Control Panel\\Desktop",
+      "value": "UserPreferencesMask",
+      "type": "REG_BINARY",
+      "data": "9012038010000000"
     },
     {
       "source": "4-registry.yml",
@@ -190,13 +148,6 @@
       "value": "SearchOrderConfig",
       "type": "REG_DWORD",
       "data": "0"
-    },
-    {
-      "source": "4-registry.yml",
-      "path": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\Maintenance",
-      "value": "MaintenanceDisabled",
-      "type": "REG_DWORD",
-      "data": "1"
     },
     {
       "source": "4-registry.yml",
@@ -316,6 +267,118 @@
     },
     {
       "source": "5-privacy.yml",
+      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsAI",
+      "value": "DisableAIDataAnalysis",
+      "type": "REG_DWORD",
+      "data": "1"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsAI",
+      "value": "DisableClickToDo",
+      "type": "REG_DWORD",
+      "data": "1"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Policies\\Microsoft\\Windows\\Explorer",
+      "value": "DisableSearchBoxSuggestions",
+      "type": "REG_DWORD",
+      "data": "1"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+      "value": "Start_IrisRecommendations",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+      "value": "Start_AccountNotifications",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+      "value": "SystemPaneSuggestionsEnabled",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+      "value": "SubscribedContent-338388Enabled",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+      "value": "SilentInstalledAppsEnabled",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+      "value": "SoftLandingEnabled",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+      "value": "SubscribedContent-338389Enabled",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+      "value": "SubscribedContent-310093Enabled",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+      "value": "SubscribedContent-338393Enabled",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+      "value": "SubscribedContent-353694Enabled",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+      "value": "SubscribedContent-353696Enabled",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+      "value": "RotatingLockScreenOverlayEnabled",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+      "value": "SubscribedContent-338387Enabled",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
       "path": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\CompatTelRunner.exe",
       "value": "Debugger",
       "type": "REG_SZ",
@@ -334,6 +397,34 @@
       "value": "Debugger",
       "type": "REG_SZ",
       "data": "%windir%\\System32\\taskkill.exe"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DeliveryOptimization",
+      "value": "DODownloadMode",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy",
+      "value": "LetAppsRunInBackground",
+      "type": "REG_DWORD",
+      "data": "2"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge",
+      "value": "StartupBoostEnabled",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge",
+      "value": "BackgroundModeEnabled",
+      "type": "REG_DWORD",
+      "data": "0"
     },
     {
       "source": "7-security.yml",
@@ -369,22 +460,6 @@
     },
     {
       "source": "7-security.yml",
-      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender",
-      "value": "DisableAntiSpyware",
-      "type": "REG_DWORD",
-      "data": "1",
-      "option": "remove-defender"
-    },
-    {
-      "source": "7-security.yml",
-      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Real-Time Protection",
-      "value": "DisableRealtimeMonitoring",
-      "type": "REG_DWORD",
-      "data": "1",
-      "option": "remove-defender"
-    },
-    {
-      "source": "7-security.yml",
       "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
       "value": "NoAutoUpdate",
       "type": "REG_DWORD",
@@ -398,6 +473,14 @@
       "type": "REG_DWORD",
       "data": "2",
       "option": "disable-updates"
+    },
+    {
+      "source": "7-security.yml",
+      "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\BitLocker",
+      "value": "PreventDeviceEncryption",
+      "type": "REG_DWORD",
+      "data": "1",
+      "option": "disable-bitlocker"
     },
     {
       "source": "8-configure-windows.yml",
@@ -499,6 +582,13 @@
     },
     {
       "source": "8-configure-windows.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+      "value": "EnableTransparency",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "8-configure-windows.yml",
       "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
       "value": "SnapAssist",
       "type": "REG_DWORD",
@@ -541,20 +631,6 @@
     },
     {
       "source": "9-network.yml",
-      "path": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\sihost.exe\\PerfOptions",
-      "value": "CpuPriorityClass",
-      "type": "REG_DWORD",
-      "data": "1"
-    },
-    {
-      "source": "9-network.yml",
-      "path": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\RuntimeBroker.exe\\PerfOptions",
-      "value": "CpuPriorityClass",
-      "type": "REG_DWORD",
-      "data": "1"
-    },
-    {
-      "source": "9-network.yml",
       "path": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\CompatTelRunner.exe\\PerfOptions",
       "value": "CpuPriorityClass",
       "type": "REG_DWORD",
@@ -573,6 +649,68 @@
       "value": "CpuPriorityClass",
       "type": "REG_DWORD",
       "data": "1"
+    }
+  ],
+  "registryDeletes": [
+    {
+      "source": "1-power.yml",
+      "path": "HKLM\\SYSTEM\\CurrentControlSet\\Services\\USB",
+      "value": "DisableSelectiveSuspend"
+    },
+    {
+      "source": "4-registry.yml",
+      "path": "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+      "value": "TcpNoDelay"
+    },
+    {
+      "source": "4-registry.yml",
+      "path": "HKLM\\SOFTWARE\\Microsoft\\MSMQ\\Parameters",
+      "value": "TCPNoDelay"
+    },
+    {
+      "source": "4-registry.yml",
+      "path": "HKLM\\SYSTEM\\CurrentControlSet\\Services\\AFD\\Parameters",
+      "value": "DefaultSendWindow"
+    },
+    {
+      "source": "4-registry.yml",
+      "path": "HKLM\\SYSTEM\\CurrentControlSet\\Services\\AFD\\Parameters",
+      "value": "DefaultReceiveWindow"
+    },
+    {
+      "source": "4-registry.yml",
+      "path": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\Maintenance",
+      "value": "MaintenanceDisabled"
+    },
+    {
+      "source": "6-debloat.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+      "value": "OneDriveSetup"
+    },
+    {
+      "source": "7-security.yml",
+      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender",
+      "value": "DisableAntiSpyware"
+    },
+    {
+      "source": "7-security.yml",
+      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Real-Time Protection",
+      "value": "DisableRealtimeMonitoring"
+    },
+    {
+      "source": "7-security.yml",
+      "path": "HKLM\\SOFTWARE\\Microsoft\\Windows Defender",
+      "value": "DisableAntiVirus"
+    },
+    {
+      "source": "9-network.yml",
+      "path": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\sihost.exe\\PerfOptions",
+      "value": "CpuPriorityClass"
+    },
+    {
+      "source": "9-network.yml",
+      "path": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\RuntimeBroker.exe\\PerfOptions",
+      "value": "CpuPriorityClass"
     }
   ],
   "services": [
@@ -680,6 +818,53 @@
       "name": "GamingServices",
       "startup": 4,
       "option": "remove-xbox"
+    }
+  ],
+  "scheduledTasks": [
+    {
+      "source": "3-services.yml",
+      "path": "\\Microsoft\\Windows\\Application Experience\\Microsoft Compatibility Appraiser",
+      "state": "disable"
+    },
+    {
+      "source": "3-services.yml",
+      "path": "\\Microsoft\\Windows\\Application Experience\\ProgramDataUpdater",
+      "state": "disable"
+    },
+    {
+      "source": "3-services.yml",
+      "path": "\\Microsoft\\Windows\\Application Experience\\PcaPatchDbTask",
+      "state": "disable"
+    },
+    {
+      "source": "3-services.yml",
+      "path": "\\Microsoft\\Windows\\Application Experience\\MareBackup",
+      "state": "disable"
+    },
+    {
+      "source": "3-services.yml",
+      "path": "\\Microsoft\\Windows\\Customer Experience Improvement Program\\Consolidator",
+      "state": "disable"
+    },
+    {
+      "source": "3-services.yml",
+      "path": "\\Microsoft\\Windows\\Customer Experience Improvement Program\\UsbCeip",
+      "state": "disable"
+    },
+    {
+      "source": "3-services.yml",
+      "path": "\\Microsoft\\Windows\\DiskDiagnostic\\Microsoft-Windows-DiskDiagnosticDataCollector",
+      "state": "disable"
+    },
+    {
+      "source": "3-services.yml",
+      "path": "\\Microsoft\\Windows\\Feedback\\Siuf\\DmClient",
+      "state": "disable"
+    },
+    {
+      "source": "3-services.yml",
+      "path": "\\Microsoft\\Windows\\Feedback\\Siuf\\DmClientOnScenarioDownload",
+      "state": "disable"
     }
   ],
   "bcd": {

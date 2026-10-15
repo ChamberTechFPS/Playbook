@@ -1,16 +1,19 @@
 title: Boot Performance
 actions:
-  - !status: {status: 'Applying BCD boot performance tweaks'}
+  - !status: {status: 'Step 1 of 8: Tuning boot settings'}
 
   # || echo fallback prevents AME from halting if the parameter is unsupported on this hardware/BIOS
   - !cmd:
       command: 'bcdedit /set tscsyncpolicy Enhanced || echo [WARN] tscsyncpolicy Enhanced not supported on this hardware - skipping'
       wait: true
+      errorAction: Log
 
   - !cmd:
       command: 'bcdedit /set bootux disabled || echo [WARN] bootux not supported on this hardware - skipping'
       wait: true
+      errorAction: Log
 
   - !cmd:
       command: 'bcdedit /timeout 0'
       wait: true
+      errorAction: Log

@@ -1,6 +1,6 @@
 title: Network
 actions:
-  - !status: {status: 'Demoting background process priorities'}
+  - !status: {status: 'Step 7 of 8: Lowering background process priority'}
 
   - !registryValue:
       path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\SearchIndexer.exe\PerfOptions'
@@ -26,17 +26,20 @@ actions:
       type: REG_DWORD
       data: '1'
 
+  # Retired in 1.3.0: sihost.exe and RuntimeBroker.exe were demoted to Idle
+  # priority here. Both sit on the shell and input path (Start, notifications,
+  # overlays, UWP permission brokering), and starving them under game load shows
+  # up as desktop and overlay hitching rather than any FPS gain. Deleted so an
+  # upgrade from an earlier Chamber restores their normal priority.
   - !registryValue:
       path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\sihost.exe\PerfOptions'
       value: 'CpuPriorityClass'
-      type: REG_DWORD
-      data: '1'
+      operation: delete
 
   - !registryValue:
       path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\RuntimeBroker.exe\PerfOptions'
       value: 'CpuPriorityClass'
-      type: REG_DWORD
-      data: '1'
+      operation: delete
 
   - !registryValue:
       path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\CompatTelRunner.exe\PerfOptions'
@@ -56,12 +59,14 @@ actions:
       type: REG_DWORD
       data: '1'
 
-  - !status: {status: 'Applying TCP network optimizations'}
+  - !status: {status: 'Step 7 of 8: Tuning network settings'}
 
   - !cmd:
       command: 'netsh int tcp set global autotuninglevel=normal'
       wait: true
+      errorAction: Log
 
   - !cmd:
       command: 'netsh int tcp set global ecncapability=disabled'
       wait: true
+      errorAction: Log
