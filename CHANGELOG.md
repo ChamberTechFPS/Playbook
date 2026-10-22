@@ -3,9 +3,61 @@
 All notable changes to Chamber Playbook are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com); versions follow [SemVer](https://semver.org).
 
-## [1.3.0] - Unreleased
+## [1.4.0] - Unreleased
 
-Minor bump rather than a patch: ISO injection and system restore are both new capability, not fixes. Not tagged yet — ISO injection needs a real end-to-end test on a VM before this ships. Replace *Unreleased* above with the release date when tagging.
+Chamber is now the **ChamberTech Playbook**, and the repository moved to [ChamberTechFPS/Playbook](https://github.com/ChamberTechFPS/Playbook) (old links redirect). This release compares the playbook against ReviOS, AtlasOS and Privacy+ with one goal: everything in Windows keeps working, games get every gain that holds up, and less runs in the background.
+
+### Highlights
+- Game audio no longer drops during Discord calls, and *End task* is on the taskbar right-click menu.
+- Windows stays on its current yearly release, so a big upgrade can't undo your setup. Monthly security updates still install.
+- Windows Search, the emoji panel and clipboard history are no longer turned off. Search pauses while you play instead.
+- *Pause Windows Updates* replaces *Stop automatic Windows Updates*. You can click Resume in Settings any time.
+- New option: stop Windows Update replacing your GPU driver with an older one.
+- More telemetry off, and Outlook and Dev Home stay removed.
+- Laptops must be plugged in to run it.
+
+Minor bump: a new option, a renamed option and several defaults changed.
+
+### Added
+- **Fault Tolerant Heap off** (phase 4). After an app crashes a few times, FTH applies heap compatibility fixes to it for good. `rundll32 fthsvc.dll,FthSysprepSpecialize` clears the fixes already applied; `HKLM\SOFTWARE\Microsoft\FTH\Enabled = 0` stops new ones. From AtlasOS.
+- **Feature release pin** (phase 7, every install). `TargetReleaseVersion = 1`, `ProductVersion = Windows 11`, and `TargetReleaseVersionInfo` set to the release the PC is on, with 25H2 as the floor. Monthly updates continue; Windows stops moving to the next yearly release on its own, which is what reset settings and brought removed apps back. A 24H2 PC is pinned to 25H2 because 24H2 Home/Pro left servicing on 2026-10-13. Raise the floor before 25H2 Home/Pro leaves servicing in October 2027. Windows 11 Home may ignore the policy. From AtlasOS.
+- **New option: *Stop Windows Update installing drivers*** (`block-wu-drivers`, off by default, security page). `ExcludeWUDriversInQualityUpdate = 1`, so Windows Update cannot replace a GPU driver with an older one. Off by default because on a USB install a PC whose Wi-Fi driver comes from Windows Update would have no Wi-Fi. Recorded in the deployment receipt like every other option. From ReviOS.
+- **Gaming quality of life** (phase 8): Windows no longer turns other audio down during calls (`UserDuckingPreference = 3`), *End task* on the taskbar's right-click menu (`TaskbarEndTask = 1`), and Dynamic Lighting off (`AmbientLightingEnabled = 0`) so it doesn't fight iCUE, Armoury Crate or SignalRGB. From AtlasOS and ReviOS.
+- **Search** (phase 5): indexing pauses during Game Mode and heavy CPU or disk load (`RespectPowerModes = 1`), search highlights off (`IsDynamicSearchBoxEnabled = 0`, downloaded daily), and web results blocked by policy as well (`ConnectedSearchUseWeb = 0`).
+- **More telemetry off** (phase 5): the `SetupPlatformTel` boot logger, the DataCollection policies `DoNotShowFeedbackNotifications`, `LimitDiagnosticLogCollection`, `LimitDumpCollection` and `AllowDeviceNameInTelemetry = 0`, feedback prompts (`NumberOfSIUFInPeriod = 0`), and the .NET SDK and PowerShell 7 telemetry opt-out environment variables. From ReviOS.
+- **Outlook and Dev Home stay removed** (phase 6). Windows Update's orchestrator reinstalls them; deleting their `UScheduler_Oobe` keys and marking the `UScheduler` jobs `workCompleted = 1` stops that. The two key deletes are not in the verification manifest (it lists them as unparsed). From AtlasOS.
+- **`PluggedIn` requirement.** AME Wizard will not start on a laptop running on battery, so a run cannot die halfway.
+
+### Changed
+- **WSearch, SysMain, TabletInputService and TapiSrv are back at their Windows defaults** (phase 3), written explicitly so an in-place upgrade turns them back on. Neither ReviOS nor AtlasOS disables any of them.
+  - WSearch: off made file search in Start and Explorer slow and broke Outlook search. It now pauses during Game Mode instead, and the phase 9 indexer priority demotions finally have a process to apply to.
+  - SysMain: no measured gain from turning it off, and it can lengthen load times.
+  - TabletInputService: off can break the emoji panel, clipboard history, the touch keyboard and Chinese/Japanese/Korean input.
+  - TapiSrv: manual start, so it cost nothing; off can break dial-up, PPPoE and Windows' built-in VPN.
+- **`NetworkThrottlingIndex` back to the Windows default of 10** (was `0xFFFFFFFF`). Published testing found no latency benefit, ReviOS reverted it too, and Chamber never measured one.
+- ***Stop automatic Windows Updates* is now *Pause Windows Updates*, and its option ID is now `pause-updates` (was `disable-updates`).** Receipts from older runs still list `disable-updates`. Instead of the notify-only policy, it uses Windows' own pause, extended to 2038 with the values ReviOS's Revision Tool writes. Settings shows *Resume*, so the user can turn updates back on without a registry edit, and Settings no longer says the PC is managed. The old `NoAutoUpdate` / `AUOptions` policy is deleted on every run, so an upgrade cleans it up.
+- **Boot menu timeout 0 → 15 seconds.** Only dual-boot PCs ever see the menu; at 0 they had no way to pick an OS.
+- **Renamed to ChamberTech Playbook.** The wizard title, descriptions, first-boot (OOBE) bullets, post-install menu, Verify and Restore headers, and the power plan's display name all use it. Internal names stay as they were so upgrades and Restore keep finding things: `Chamber.apbx`, `C:\ChamberTech`, the power plan GUID, script names, and AME's `<Name>` and `<UniqueId>`.
+- **Repository moved** from `ChamberTechFPS/Chamber-Playbook` to `ChamberTechFPS/Playbook`. GitHub redirects the old URLs. `playbook.conf`'s `<Git>` points at the new one; 1.3.0 installs still carry the old URL and rely on the redirect for AME's update check.
+- **README rewritten for a typical PC gamer:** badges, plain-language feature list, 4-step install, an options table, and an FAQ (bans, FPS, undo, Windows Update, Game Pass, laptops, files, antivirus warnings). The ISO injection guide moved to `docs/ISO-INJECTION.md`, and the phase table, what the playbook leaves out, the debloat list and Verify/Restore details moved to `docs/HOW-IT-WORKS.md`. Removed the claim that the playbook blocks telemetry at the firewall (phase 5 deliberately adds no firewall rules).
+- **Post-install menu** (`START-HERE.bat`): plain-language labels (Check my PC, Undo the playbook) with the same keys, and it now stops with instructions when not run as administrator instead of failing partway.
+- **Release notes** are built from this CHANGELOG by the release workflow, with install steps on top. A tag with a suffix (`v1.4.0-beta.1`) is published as a prerelease, which keeps it off `/releases/latest`.
+- **Issue templates:** removed the link to Discussions, which are not enabled on the repository.
+
+### Removed
+- **Hosts-file telemetry blocks.** Chamber leaves Defender on, and Defender flags these entries as `SettingsModifier:Win32/HostsFileHijack` and can strip them. The six domains were mostly legacy endpoints, and telemetry is already stopped by services and policies. `Update-HostsTelemetryBlocks.ps1` is now `Remove-HostsTelemetryBlocks.ps1`: it removes exactly the six lines older versions added and nothing else. The manifest's `hostsEntries` became `hostsRetired`; Verify warns if any remain, and Restore's `hosts` scope still clears them.
+- **`AutoEndTasks = 1`.** It closed apps at shutdown without asking, losing unsaved work. Deleted on upgrade; the shorter shutdown timeouts stay.
+- **`docs/BENCHMARKING.md`.**
+
+### Rollback notes
+- Every new value has a Windows default in `Restore-Chamber.ps1`, so `-Apply` reverts it.
+- Feature pin: delete `TargetReleaseVersion`, `ProductVersion` and `TargetReleaseVersionInfo` under `HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate`. Restore removes the first two; the third is written by a script, so it is not in the manifest, and it does nothing without `TargetReleaseVersion`.
+- Pause: click *Resume* in Settings > Windows Update, or delete the seven `Pause*` / `FlightSettingsMaxPauseDays` values under `HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings`.
+- FTH: set `HKLM\SOFTWARE\Microsoft\FTH\Enabled` back to 1. Fixes it already cleared are not reapplied.
+
+## [1.3.0] - 2026-10-15
+
+Minor bump rather than a patch: ISO injection and system restore are both new capability, not fixes.
 
 ### Fixed (first real ISO test: 9800X3D, 26H2 build 26300, offline, 2026-10-07)
 The offline Chrome install from the cached payload worked. Verify still reported 9 failures and 1 warning. They had three causes, all specific to running during OOBE:
@@ -35,7 +87,7 @@ The fix is the new `Executables/Complete-ChamberSetup.ps1`. It re-applies only w
 - **Debloat log:** it said Quick Assist was "preserved by default" while removing it. Quick Assist is removed by design; the log line no longer claims otherwise.
 
 ### Removed
-- **`GlobalTimerResolutionRequests` = 1** (phase 4), added earlier in this cycle behind a benchmark gate. No CS2 / Fortnite results per `docs/BENCHMARKING.md` were recorded to show a 1% low or frametime win, so it does not ship. Re-add it only with those numbers. Restore no longer carries a default for it.
+- **`GlobalTimerResolutionRequests` = 1** (phase 4), added earlier in this cycle behind a benchmark gate. No CS2 / Fortnite results were recorded to show a 1% low or frametime win, so it does not ship. Re-add it only with those numbers. Restore no longer carries a default for it.
 - **"Turn off Microsoft Defender" (`remove-defender`).** Tamper Protection is on after every fresh install, and Windows ignores Defender's policy and service changes while it is. On the ISO test the option was selected and Defender kept running. Rather than ship an option that silently does nothing, Defender stays on.
   - Its in-game cost is small: the measurable effect is on load times and installs, and Verify already suggests game-folder exclusions for that.
   - `7-security.yml` now deletes `DisableAntiSpyware`, `DisableRealtimeMonitoring` and `DisableAntiVirus`, so an in-place upgrade from an older Chamber also stops Windows Security showing "managed by your organization".
@@ -99,7 +151,7 @@ The fix is the new `Executables/Complete-ChamberSetup.ps1`. It re-applies only w
 
 ### Changed
 - **Option menu wording rewritten** for accuracy and length. Option names (`disable-vbs` and so on) are unchanged, so tasks, receipts and verification are unaffected. The Defender option was relabelled during this work and then removed entirely; see *Removed*.
-  - The VBS option no longer claims "Recovers 5-10% FPS", a figure Chamber has not measured (see `docs/BENCHMARKING.md`). It now says the gain depends on hardware and warns that some anti-cheat, such as Riot Vanguard, can require VBS.
+  - The VBS option no longer claims "Recovers 5-10% FPS", a figure Chamber has not measured. It now says the gain depends on hardware and warns that some anti-cheat, such as Riot Vanguard, can require VBS.
   - *Remove Xbox apps and services* now says it also disables the Xbox accessory service that controllers use for updates, and that it breaks Game Pass and Xbox sign-in in games.
   - The Game Bar option no longer claims to "cut GPU overhead".
   - Page descriptions are shortened toward AME's 50-85 character guidance. The security page keeps its note that ISO choices apply to every PC.
@@ -150,7 +202,7 @@ This release is about which Windows versions Chamber runs on, and how you get on
 
 ## [1.2.4] - 2026-08-04
 
-Housekeeping release. Every change is performance-neutral by construction, so v1.2.4 can serve as a frozen build for benchmarking against stock Windows — see [docs/BENCHMARKING.md](docs/BENCHMARKING.md).
+Housekeeping release. Every change is performance-neutral by construction, so v1.2.4 can serve as a frozen build for benchmarking against stock Windows.
 
 ### Changed
 - The stock **Balanced**, **High Performance**, and **Power Saver** power schemes are no longer deleted. Chamber's Ultimate Performance duplicate is still created and set active — the only difference is that the stock schemes survive, so a user can fall back or A/B against Balanced without `powercfg -restoredefaultschemes`. Deleted schemes were inactive and cost nothing; removing them only took away the user's escape hatch.

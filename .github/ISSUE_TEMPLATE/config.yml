@@ -2,7 +2,4 @@ blank_issues_enabled: true
 contact_links:
   - name: ChamberTech Discord
     url: https://discord.gg/TG4djSaZ2w
-    about: Fastest way to get help — early access builds and support live here.
-  - name: Tweak suggestion? Open a discussion first
-    url: https://github.com/ChamberTechFPS/Chamber-Playbook/discussions
-    about: New tweak ideas get discussed before implementation.
+    about: Fastest way to get help, and the place to suggest a tweak before opening an issue.

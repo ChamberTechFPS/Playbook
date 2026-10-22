@@ -152,3 +152,31 @@ actions:
       value: 'ShowCopilotButton'
       type: REG_DWORD
       data: '0'
+
+  - !status: {status: 'Step 7 of 8: Gaming quality-of-life settings'}
+
+  # Sound > Communications: "Do nothing". Windows' default turns every other
+  # sound down 80% while a Discord or Teams call is open - including the game.
+  - !registryValue:
+      path: 'HKCU\SOFTWARE\Microsoft\Multimedia\Audio'
+      value: 'UserDuckingPreference'
+      type: REG_DWORD
+      data: '3'
+
+  # "End task" on the taskbar's right-click menu: close a frozen game without
+  # opening Task Manager over it.
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\TaskbarDeveloperSettings'
+      value: 'TaskbarEndTask'
+      type: REG_DWORD
+      data: '1'
+
+  # Dynamic Lighting takes control of RGB devices and fights the vendor apps
+  # (iCUE, Armoury Crate, SignalRGB) most gaming PCs already use. Anyone who
+  # wants Windows to drive their RGB turns it back on in Settings >
+  # Personalization > Dynamic Lighting.
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Lighting'
+      value: 'AmbientLightingEnabled'
+      type: REG_DWORD
+      data: '0'

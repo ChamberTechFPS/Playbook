@@ -19,6 +19,30 @@ actions:
       value: 'OneDriveSetup'
       operation: delete
 
+  # Windows Update's orchestrator reinstalls Outlook and Dev Home after they are
+  # removed: UScheduler_Oobe holds the pending install, and workCompleted=1
+  # marks the scheduled job as already done. Same approach as AtlasOS. Both
+  # apps can still be installed from the Microsoft Store.
+  - !registryKey:
+      path: 'HKLM\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\OutlookUpdate'
+      operation: delete
+
+  - !registryKey:
+      path: 'HKLM\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe\DevHomeUpdate'
+      operation: delete
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\OutlookUpdate'
+      value: 'workCompleted'
+      type: REG_DWORD
+      data: '1'
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\DevHomeUpdate'
+      value: 'workCompleted'
+      type: REG_DWORD
+      data: '1'
+
   - !status: {status: 'Step 5 of 8: Removing Xbox apps', option: 'remove-xbox'}
 
   - !cmd:

@@ -13,7 +13,10 @@ actions:
       wait: true
       errorAction: Log
 
+  # 15 seconds to pick an OS. Only dual-boot PCs see the menu: with one Windows
+  # install Boot Manager skips it whatever the timeout. 0 (Chamber 1.2.x) left
+  # dual-boot users no way to choose. Windows' own default is 30.
   - !cmd:
-      command: 'bcdedit /timeout 0'
+      command: 'bcdedit /timeout 15'
       wait: true
       errorAction: Log

@@ -200,10 +200,14 @@ $RegistryDefaults = @{
     'HKLM\SYSTEM\CurrentControlSet\Services\USB|DisableSelectiveSuspend' = @{ Action = 'Delete' }
     'HKLM\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling|PowerThrottlingOff' = @{ Action = 'Delete' }
 
+    # --- 3-services.yml (WSearch is written back to its own default) -------
+    'HKLM\SYSTEM\CurrentControlSet\Services\WSearch|DelayedAutoStart' = @{ Action = 'Set'; Data = 1; Type = 'DWord'; Note = 'already the Windows default' }
+
     # --- 4-registry.yml ------------------------------------------------------
     'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile|SystemResponsiveness' = @{ Action = 'Set'; Data = 20; Type = 'DWord' }
     'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games|Priority' = @{ Action = 'Set'; Data = 2; Type = 'DWord' }
     'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel|GlobalTimerResolutionRequests' = @{ Action = 'Delete' }
+    'HKLM\SOFTWARE\Microsoft\FTH|Enabled' = @{ Action = 'Set'; Data = 1; Type = 'DWord'; Note = 'Fault Tolerant Heap back on; fixes it cleared are not reapplied' }
     # Hex, like the manifest. Stock Windows 11 visual effects.
     'HKCU\Control Panel\Desktop|UserPreferencesMask' = @{ Action = 'Set'; Data = '9E1E078012000000'; Type = 'Binary' }
     'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games|Scheduling Category' = @{ Action = 'Set'; Data = 'Medium'; Type = 'String' }
@@ -219,7 +223,7 @@ $RegistryDefaults = @{
     'HKCU\Control Panel\Desktop|HungAppTimeout'      = @{ Action = 'Delete' }
     'HKCU\Control Panel\Desktop|WaitToKillAppTimeout'= @{ Action = 'Set'; Data = '20000'; Type = 'String' }
     'HKCU\Control Panel\Desktop|AutoEndTasks'        = @{ Action = 'Set'; Data = '0'; Type = 'String' }
-    'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile|NetworkThrottlingIndex' = @{ Action = 'Set'; Data = 10; Type = 'DWord' }
+    'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile|NetworkThrottlingIndex' = @{ Action = 'Set'; Data = 10; Type = 'DWord'; Note = 'already the Windows default' }
     'HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters|TcpNoDelay'   = @{ Action = 'Delete' }
     'HKLM\SOFTWARE\Microsoft\MSMQ\Parameters|TCPNoDelay'                   = @{ Action = 'Delete' }
     'HKLM\SYSTEM\CurrentControlSet\Services\AFD\Parameters|DefaultSendWindow'    = @{ Action = 'Delete' }
@@ -241,6 +245,14 @@ $RegistryDefaults = @{
     'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection|AllowTelemetry' = @{ Action = 'Delete' }
     'HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\Diagtrack-Listener|Start' = @{ Action = 'Set'; Data = 1; Type = 'DWord' }
     'HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\SQMLogger|Start'          = @{ Action = 'Set'; Data = 1; Type = 'DWord' }
+    'HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\SetupPlatformTel|Start'   = @{ Action = 'Set'; Data = 1; Type = 'DWord' }
+    'HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection|DoNotShowFeedbackNotifications' = @{ Action = 'Delete' }
+    'HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection|LimitDiagnosticLogCollection'   = @{ Action = 'Delete' }
+    'HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection|LimitDumpCollection'            = @{ Action = 'Delete' }
+    'HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection|AllowDeviceNameInTelemetry'     = @{ Action = 'Delete' }
+    'HKCU\Software\Microsoft\Siuf\Rules|NumberOfSIUFInPeriod'                                 = @{ Action = 'Delete' }
+    'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment|DOTNET_CLI_TELEMETRY_OPTOUT' = @{ Action = 'Delete' }
+    'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment|POWERSHELL_TELEMETRY_OPTOUT' = @{ Action = 'Delete' }
     'HKCU\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo|Enabled'        = @{ Action = 'Set'; Data = 1; Type = 'DWord' }
     'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced|Start_TrackProgs' = @{ Action = 'Set'; Data = 1; Type = 'DWord' }
     'HKLM\SOFTWARE\Policies\Microsoft\Windows\System|EnableActivityFeed'      = @{ Action = 'Delete' }
@@ -250,6 +262,9 @@ $RegistryDefaults = @{
     'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsAI|DisableAIDataAnalysis'      = @{ Action = 'Delete' }
     'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsAI|DisableClickToDo'           = @{ Action = 'Delete' }
     'HKCU\Software\Policies\Microsoft\Windows\Explorer|DisableSearchBoxSuggestions' = @{ Action = 'Delete' }
+    'HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Search|ConnectedSearchUseWeb'       = @{ Action = 'Delete' }
+    'HKCU\Software\Microsoft\Windows\CurrentVersion\SearchSettings|IsDynamicSearchBoxEnabled' = @{ Action = 'Delete' }
+    'HKLM\SOFTWARE\Microsoft\Windows Search\Gather\Windows\SystemIndex|RespectPowerModes'   = @{ Action = 'Delete' }
     'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced|Start_IrisRecommendations'  = @{ Action = 'Delete' }
     'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced|Start_AccountNotifications' = @{ Action = 'Delete' }
     # ContentDeliveryManager: an absent value means Windows' default (on), so delete
@@ -273,6 +288,11 @@ $RegistryDefaults = @{
     'HKLM\SOFTWARE\Policies\Microsoft\Edge|StartupBoostEnabled'                     = @{ Action = 'Delete' }
     'HKLM\SOFTWARE\Policies\Microsoft\Edge|BackgroundModeEnabled'                   = @{ Action = 'Delete' }
 
+    # --- 6-debloat.yml -------------------------------------------------------
+    # Deleting lets Windows Update's orchestrator reinstall Outlook / Dev Home.
+    'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\OutlookUpdate|workCompleted' = @{ Action = 'Delete' }
+    'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator\UScheduler\DevHomeUpdate|workCompleted' = @{ Action = 'Delete' }
+
     # --- 7-security.yml ------------------------------------------------------
     'HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard|EnableVirtualizationBasedSecurity' = @{ Action = 'Set'; Data = 1; Type = 'DWord'; Note = 're-enables VBS - requires reboot' }
     'HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard|RequirePlatformSecurityFeatures'   = @{ Action = 'Set'; Data = 1; Type = 'DWord' }
@@ -282,6 +302,19 @@ $RegistryDefaults = @{
     'HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection|DisableRealtimeMonitoring' = @{ Action = 'Delete' }
     'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU|NoAutoUpdate' = @{ Action = 'Delete' }
     'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU|AUOptions'    = @{ Action = 'Delete' }
+    # Feature release pin. TargetReleaseVersionInfo is written by a script, so it
+    # is not in the manifest; without TargetReleaseVersion it is inert.
+    'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate|TargetReleaseVersion' = @{ Action = 'Delete'; Note = 'Windows can move to the next yearly release again' }
+    'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate|ProductVersion'       = @{ Action = 'Delete' }
+    'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate|ExcludeWUDriversInQualityUpdate' = @{ Action = 'Delete' }
+    # Pause until 2038 (pause-updates). Deleting all seven ends the pause.
+    'HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings|FlightSettingsMaxPauseDays'    = @{ Action = 'Delete' }
+    'HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings|PauseFeatureUpdatesStartTime'  = @{ Action = 'Delete' }
+    'HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings|PauseFeatureUpdatesEndTime'    = @{ Action = 'Delete' }
+    'HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings|PauseQualityUpdatesStartTime'  = @{ Action = 'Delete' }
+    'HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings|PauseQualityUpdatesEndTime'    = @{ Action = 'Delete' }
+    'HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings|PauseUpdatesStartTime'         = @{ Action = 'Delete' }
+    'HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings|PauseUpdatesExpiryTime'        = @{ Action = 'Delete' }
 
     # Deleting this only lets Windows consider device encryption again; it does
     # NOT re-encrypt the drive. Turn encryption back on from Settings > Privacy &
@@ -307,6 +340,9 @@ $RegistryDefaults = @{
     'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize|AppsUseLightTheme'   = @{ Action = 'Set'; Data = 1; Type = 'DWord' }
     'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize|SystemUsesLightTheme'= @{ Action = 'Set'; Data = 1; Type = 'DWord' }
     'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize|EnableTransparency'  = @{ Action = 'Set'; Data = 1; Type = 'DWord' }
+    'HKCU\SOFTWARE\Microsoft\Multimedia\Audio|UserDuckingPreference' = @{ Action = 'Delete' }
+    'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\TaskbarDeveloperSettings|TaskbarEndTask' = @{ Action = 'Delete' }
+    'HKCU\Software\Microsoft\Lighting|AmbientLightingEnabled'         = @{ Action = 'Delete' }
 }
 
 # The IFEO PerfOptions demotions in 9-network.yml are all "delete the value"; the
@@ -332,7 +368,7 @@ foreach ($v in @('ValueMax', 'ValueMin')) {
 
 Write-Host ''
 Write-Host ('=' * 66) -ForegroundColor DarkMagenta
-Write-Host '  CHAMBER - SYSTEM RESTORE' -ForegroundColor Magenta
+Write-Host '  CHAMBERTECH PLAYBOOK - UNDO' -ForegroundColor Magenta
 Write-Host ('=' * 66) -ForegroundColor DarkMagenta
 
 # --- Load manifest -----------------------------------------------------------
@@ -832,7 +868,8 @@ if (Test-Scope 'hosts') {
     $hostsPath = Join-Path $env:SystemRoot 'System32\drivers\etc\hosts'
     try {
         $lines = @(Get-Content -LiteralPath $hostsPath -ErrorAction Stop)
-        $entries = @($manifest.hostsEntries)
+        # Chamber no longer adds hosts lines; this clears any an older version left.
+        $entries = @($manifest.hostsRetired)
         $keep = @($lines | Where-Object {
             $line = $_
             -not ($entries | Where-Object { $line -match [regex]::Escape($_) })

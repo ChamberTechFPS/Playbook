@@ -56,7 +56,7 @@ $ErrorActionPreference = 'Stop'
 # Must equal <Version> in playbook.conf. tools/validate_playbook_conf.py fails
 # the build if the two drift, because the receipt is the only record of which
 # Chamber built a given machine and a stale number here is worse than none.
-$ChamberVersion = '1.3.0'
+$ChamberVersion = '1.4.0'
 
 $receiptDir  = 'C:\ChamberTech'
 $receiptPath = Join-Path $receiptDir 'deployment-receipt.json'

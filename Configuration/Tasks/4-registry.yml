@@ -56,8 +56,27 @@ actions:
   # changed nothing; removed rather than counted as a tweak.
 
   # GlobalTimerResolutionRequests=1 (system-wide timer resolution) was staged for
-  # 1.3.0 behind a benchmark gate. No CS2 / Fortnite run per docs/BENCHMARKING.md
-  # showed a win, so it was removed before tagging. Re-add only with results.
+  # 1.3.0. No CS2 / Fortnite run showed a 1% low or frametime win, so it was
+  # removed before tagging. Re-add only with results.
+
+  - !status: {status: 'Step 3 of 8: Turning off Fault Tolerant Heap'}
+
+  # After an app crashes a few times, Fault Tolerant Heap silently applies heap
+  # compatibility fixes to it - and they stay applied, costing performance on
+  # every later launch. A game that crashed during a driver install or an
+  # overclock test would carry them for good. The rundll32 call clears the
+  # fixes FTH has already applied; the value stops it applying new ones.
+  # Rollback: set Enabled back to 1.
+  - !cmd:
+      command: 'rundll32.exe fthsvc.dll,FthSysprepSpecialize'
+      wait: true
+      errorAction: Log
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\FTH'
+      value: 'Enabled'
+      type: REG_DWORD
+      data: '0'
 
   - !status: {status: 'Step 3 of 8: Turning on hardware-accelerated GPU scheduling'}
 
@@ -117,22 +136,26 @@ actions:
       type: REG_SZ
       data: '2000'
 
+  # Retired in 1.4.0: AutoEndTasks=1 closed apps at shutdown without asking, so
+  # unsaved work was lost. The shorter timeouts above stay. Deleted so an
+  # upgrade from an earlier Chamber gets the "save your work?" prompt back.
   - !registryValue:
       path: 'HKCU\Control Panel\Desktop'
       value: 'AutoEndTasks'
-      type: REG_SZ
-      data: '1'
+      operation: delete
 
-  - !status: {status: 'Step 3 of 8: Tuning network latency'}
+  - !status: {status: 'Step 3 of 8: Cleaning up old network tweaks'}
 
-  # NetworkThrottlingIndex is an MMCSS value: it lives under Multimedia\SystemProfile
-  # (next to SystemResponsiveness), NOT under Tcpip\Parameters where MMCSS never
-  # reads it. 0xFFFFFFFF disables the default ~10 packets/ms multimedia throttle.
+  # NetworkThrottlingIndex is an MMCSS value under Multimedia\SystemProfile.
+  # Earlier Chamber versions set 0xFFFFFFFF (throttle off). Published testing
+  # found no latency benefit, ReviOS reverted it, and Chamber never measured a
+  # win, so 1.4.0 writes back the Windows default of 10. Written rather than
+  # deleted because clean Windows ships the value present.
   - !registryValue:
       path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile'
       value: 'NetworkThrottlingIndex'
       type: REG_DWORD
-      data: '4294967295'
+      data: '10'
 
   # Retired in 1.3.0, deleted so an upgrade from an earlier Chamber cleans up:
   #   Tcpip\Parameters\TcpNoDelay - Windows does not read Nagle settings at this

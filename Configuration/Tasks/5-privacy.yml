@@ -26,6 +26,62 @@ actions:
       type: REG_DWORD
       data: '0'
 
+  # Setup and upgrade telemetry trace, started at every boot.
+  - !registryValue:
+      path: 'HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\SetupPlatformTel'
+      value: 'Start'
+      type: REG_DWORD
+      data: '0'
+
+  # The rest of the DataCollection policy set (as ReviOS applies it): no
+  # feedback pop-ups, no diagnostic log or crash dump uploads, and the PC's name
+  # left out of whatever diagnostic data Windows still sends.
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection'
+      value: 'DoNotShowFeedbackNotifications'
+      type: REG_DWORD
+      data: '1'
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection'
+      value: 'LimitDiagnosticLogCollection'
+      type: REG_DWORD
+      data: '1'
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection'
+      value: 'LimitDumpCollection'
+      type: REG_DWORD
+      data: '1'
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection'
+      value: 'AllowDeviceNameInTelemetry'
+      type: REG_DWORD
+      data: '0'
+
+  # "Windows should ask for my feedback": Never.
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Siuf\Rules'
+      value: 'NumberOfSIUFInPeriod'
+      type: REG_DWORD
+      data: '0'
+
+  # .NET SDK and PowerShell 7 send usage telemetry on every run unless these are
+  # set. Machine environment variables, so they apply to every user and take
+  # effect for processes started after the restart.
+  - !registryValue:
+      path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
+      value: 'DOTNET_CLI_TELEMETRY_OPTOUT'
+      type: REG_SZ
+      data: '1'
+
+  - !registryValue:
+      path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
+      value: 'POWERSHELL_TELEMETRY_OPTOUT'
+      type: REG_SZ
+      data: '1'
+
   - !registryValue:
       path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo'
       value: 'Enabled'
@@ -82,13 +138,38 @@ actions:
       type: REG_DWORD
       data: '1'
 
-  - !status: {status: 'Step 4 of 8: Removing web results from Start'}
+  - !status: {status: 'Step 4 of 8: Removing web results from search'}
 
   # Removes Bing web results from Start search. Side effect: File Explorer's
   # search box also stops listing recent searches.
   - !registryValue:
       path: 'HKCU\Software\Policies\Microsoft\Windows\Explorer'
       value: 'DisableSearchBoxSuggestions'
+      type: REG_DWORD
+      data: '1'
+
+  # Policy backup for the value above: Windows updates have re-enabled web
+  # results in Start before while leaving DisableSearchBoxSuggestions in place.
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Search'
+      value: 'ConnectedSearchUseWeb'
+      type: REG_DWORD
+      data: '0'
+
+  # Search highlights: the illustrated "trivia" in the search box and Start,
+  # downloaded from Microsoft every day.
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\SearchSettings'
+      value: 'IsDynamicSearchBoxEnabled'
+      type: REG_DWORD
+      data: '0'
+
+  # Search indexing stays on (phase 3) so Start and Explorer search work, but
+  # it pauses while Game Mode is active, CPU use is above 80% or disk use is
+  # above 70%. That is what keeps it out of a match.
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\Windows Search\Gather\Windows\SystemIndex'
+      value: 'RespectPowerModes'
       type: REG_DWORD
       data: '1'
 
@@ -196,11 +277,14 @@ actions:
       type: REG_SZ
       data: '%windir%\System32\taskkill.exe'
 
-  - !status: {status: 'Step 4 of 8: Blocking telemetry servers'}
-
+  # Retired in 1.4.0: hosts-file telemetry blocks. Chamber leaves Defender on,
+  # and Defender flags these entries as SettingsModifier:Win32/HostsFileHijack
+  # and can strip them, so the block raised a threat alert and was not reliable.
+  # The services, policies and IFEO blocks above already stop the telemetry.
+  # The script removes only the six lines older Chamber versions added.
   - !cmd:
       exeDir: true
-      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Update-HostsTelemetryBlocks.ps1"'
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Remove-HostsTelemetryBlocks.ps1"'
       wait: true
       errorAction: Log
 

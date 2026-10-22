@@ -23,7 +23,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 TASKS_DIR = REPO / "Configuration" / "Tasks"
 DEBLOAT_PS1 = REPO / "Executables" / "Invoke-BalancedDebloat.ps1"
-HOSTS_PS1 = REPO / "Executables" / "Update-HostsTelemetryBlocks.ps1"
+HOSTS_PS1 = REPO / "Executables" / "Remove-HostsTelemetryBlocks.ps1"
 OUT = REPO / "PostInstall" / "Verify" / "verification-manifest.json"
 
 KV_RE = re.compile(r"^\s*(\w+):\s*(.*)$")
@@ -111,7 +111,9 @@ def main() -> int:
         "services": [],
         "scheduledTasks": [],
         "bcd": {"flags": [], "timeout": None},
-        "hostsEntries": [],
+        # Hosts lines older Chamber versions added and 1.3.0 removes. Verified
+        # absent, like registryDeletes.
+        "hostsRetired": [],
         "debloat": {"balanced": [], "xbox": []},
         "unparsedActions": [],
     }
@@ -178,9 +180,9 @@ def main() -> int:
             elif name in ("registryKey", "appx", "scheduledTask"):
                 manifest["unparsedActions"].append({"source": source, "action": name, "props": p})
 
-    # Hosts entries — parse from the executable that writes them
+    # Retired hosts entries — parse from the executable that removes them
     if HOSTS_PS1.exists():
-        manifest["hostsEntries"] = HOSTS_ENTRY_RE.findall(HOSTS_PS1.read_text(encoding="utf-8", errors="replace"))
+        manifest["hostsRetired"] = HOSTS_ENTRY_RE.findall(HOSTS_PS1.read_text(encoding="utf-8", errors="replace"))
 
     # Debloat targets — parse from the debloat script (single source of truth)
     if DEBLOAT_PS1.exists():
@@ -200,7 +202,7 @@ def main() -> int:
         f"services: {len(manifest['services'])} | "
         f"scheduled tasks: {len(manifest['scheduledTasks'])} | "
         f"BCD flags: {len(manifest['bcd']['flags'])} | "
-        f"hosts entries: {len(manifest['hostsEntries'])} | "
+        f"retired hosts entries: {len(manifest['hostsRetired'])} | "
         f"debloat: {len(manifest['debloat']['balanced'])} balanced + {len(manifest['debloat']['xbox'])} xbox | "
         f"unparsed: {len(manifest['unparsedActions'])}"
     )
