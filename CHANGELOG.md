@@ -3,7 +3,7 @@
 All notable changes to Chamber Playbook are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com); versions follow [SemVer](https://semver.org).
 
-## [1.3.2] - Unreleased
+## [1.3.2] - 2026-10-25
 
 ### Fixed
 - **ISO injection crashed in 1.3.1.** Pressing *Select* on AME Wizard's ISO page failed with `InvalidOperationException: Sequence contains no matching element`. 1.3.1 added two `!download` actions for the VC++ runtimes whose `package:` names had no `<Software>` entry in `playbook.conf`, and AME looks up every download's package among those entries. The downloads are removed. `Install-VCRedist.ps1` now always downloads the runtimes from Microsoft at run time; an injected OOBE already requires internet (`<Internet>Force</Internet>`).
