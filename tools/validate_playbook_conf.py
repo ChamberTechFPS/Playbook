@@ -17,10 +17,11 @@ mistakes are the expensive kind: they do not fail at load, they fail on a
 machine somebody has already booted.
 
   - `!task:` paths resolve, and every task file has a title and an actions list
-  - each <Software> package has a matching !download and a real feature option
-  - cached downloads are HTTPS from a vendor-owned host, with an option, a
-    package name, a destination and cpuArch X64, staged `iso: only`/`oobe: false`
-  - every cached payload is one Install-CachedBrowser.ps1 knows how to install
+  - each <Software> package has a matching !download gated on the same, real
+    feature option
+  - cached downloads are HTTPS from a vendor-owned host, with a package name,
+    a destination and cpuArch X64, staged `iso: only`/`oobe: false`
+  - every cached payload is one an Executables script knows how to install
   - winget and shutdown.exe actions are `oobe: false`, so neither reaches an
     injected OOBE
   - !powerShell is never staged to injection
@@ -76,7 +77,11 @@ PROP_RE = re.compile(r"^(\w+):\s*(.*)$")
 # Windows setup with nobody watching, so the source is pinned to release hosts
 # the vendor itself controls - not a mirror, not a shortener, not a CDN whose
 # namespace someone else can write to (NFR-003).
-VENDOR_HOSTS = {"dl.google.com", "github.com", "brave.com"}
+#
+# aka.ms is a shortener, but a Microsoft-owned one, and it is the only stable
+# URL Microsoft publishes for the latest VC++ runtime. Install-VCRedist.ps1
+# requires a Microsoft signature before running what it points at.
+VENDOR_HOSTS = {"dl.google.com", "github.com", "brave.com", "aka.ms"}
 
 # $ChamberVersion in Executables/Write-ChamberReceipt.ps1.
 RECEIPT_VERSION_RE = re.compile(r"\$ChamberVersion\s*=\s*'([^']+)'")
@@ -336,7 +341,10 @@ def check_iso_cache(root, errors):
             )
             continue
 
-        for required in ("option", "package", "url", "destination"):
+        # `option` is not required here: the VC++ runtimes are cached
+        # unconditionally. A download backing a <Software> tile must carry its
+        # option - _check_software_pairing enforces that.
+        for required in ("package", "url", "destination"):
             if not props.get(required):
                 errors.append(f"{where}: !download is missing `{required}`.")
 
@@ -368,7 +376,7 @@ def check_iso_cache(root, errors):
             )
 
         if props.get("package"):
-            downloads[props["package"]] = props.get("destination", "")
+            downloads[props["package"]] = (props.get("destination", ""), props.get("option", ""))
 
     _check_software_pairing(root, downloads, errors)
 
@@ -397,19 +405,28 @@ def _check_software_pairing(root, downloads, errors):
                     f"<Software> package {pkg_name!r} is gated on option "
                     f"{option!r}, which no feature page defines."
                 )
+            # A tile's payload must be gated on the same option, or a
+            # browser-skip ISO would still carry the browser (PRD FR-022).
+            if pkg_name in downloads and downloads[pkg_name][1] != (option or ""):
+                errors.append(
+                    f"<Software> package {pkg_name!r} is gated on option "
+                    f"{option!r} but its !download has option "
+                    f"{downloads[pkg_name][1]!r}."
+                )
 
     # Every cached file needs something that installs it, and that installer has
     # to know the same file name. This is the pairing FR-025 rests on: a
     # signature check against a file nothing downloaded is not a check.
-    installer = REPO / "Executables" / "Install-CachedBrowser.ps1"
-    catalog = installer.read_text(encoding="utf-8") if installer.is_file() else ""
-    for pkg, destination in downloads.items():
+    catalog = "\n".join(
+        p.read_text(encoding="utf-8") for p in sorted((REPO / "Executables").glob("*.ps1"))
+    )
+    for pkg, (destination, _option) in downloads.items():
         filename = destination.replace("/", "\\").split("\\")[-1]
         if filename and filename not in catalog:
             errors.append(
                 f"Cached payload {filename!r} (package {pkg!r}) does not appear "
-                "in Executables/Install-CachedBrowser.ps1, so nothing during the "
-                "OOBE knows how to verify or install it."
+                "in any Executables/*.ps1 script, so nothing during the OOBE "
+                "knows how to verify or install it."
             )
 
 

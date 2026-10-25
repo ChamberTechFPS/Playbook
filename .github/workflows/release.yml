@@ -80,6 +80,7 @@ jobs:
               Executables/Complete-ChamberSetup.ps1 \
               Executables/Write-ChamberReceipt.ps1 \
               Executables/Disable-BitLockerEncryption.ps1 \
+              Executables/Install-VCRedist.ps1 \
               Images/chrome.png \
               Images/brave.png \
               PostInstall/Welcome.html \

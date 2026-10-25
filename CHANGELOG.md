@@ -3,9 +3,16 @@
 All notable changes to Chamber Playbook are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com); versions follow [SemVer](https://semver.org).
 
-## [1.3.0] - Unreleased
+## [1.3.1] - Unreleased
 
-Minor bump rather than a patch: ISO injection and system restore are both new capability, not fixes. Not tagged yet — ISO injection needs a real end-to-end test on a VM before this ships. Replace *Unreleased* above with the release date when tagging.
+### Fixed
+- **The Visual C++ runtimes were never installed.** Phase 10 only ran `Executables/vcredist_all.exe`, which is git-ignored, so the released `.apbx` never contained it and the step skipped on every install. Apps built on the v14 runtime then failed at launch — the NVIDIA App reported `VCRUNTIME140.dll`, `VCRUNTIME140_1.dll` and `MSVCP140.dll` missing. The new `Executables/Install-VCRedist.ps1` installs the Visual C++ 2015-2022 runtimes (x64 and x86) on every run. An injected install uses the copies `0-iso-cache.yml` now caches into the image; otherwise it downloads them from Microsoft. Either way it requires a valid Microsoft signature before running them, and it always exits 0. `vcredist_all.exe` is still run first when present, for the 2005-2013 runtimes.
+- `validate_playbook_conf.py` now accepts unconditional ISO downloads (no `option:`) and `aka.ms` as a vendor host. A download backing a `<Software>` tile must still be gated on that tile's option.
+- Rollback: uninstall "Microsoft Visual C++ 2015-2022 Redistributable" (x64 and x86) from Installed apps. Other software may depend on it.
+
+## [1.3.0] - 2026-10-14
+
+Minor bump rather than a patch: ISO injection and system restore are both new capability, not fixes.
 
 ### Fixed (first real ISO test: 9800X3D, 26H2 build 26300, offline, 2026-10-07)
 The offline Chrome install from the cached payload worked. Verify still reported 9 failures and 1 warning. They had three causes, all specific to running during OOBE:

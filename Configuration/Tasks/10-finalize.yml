@@ -59,6 +59,17 @@ actions:
       wait: true
       errorAction: Log
 
+  # vcredist_all.exe above is optional and never in the release build, so the
+  # v14 (2015-2022) runtimes most apps need are installed here regardless: from
+  # the payload 0-iso-cache.yml cached on an injected install, otherwise
+  # downloaded from Microsoft. Signature-checked, always exits 0.
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Install-VCRedist.ps1"'
+      wait: true
+      errorAction: Log
+
   # --- Deployment receipt: start -------------------------------------------
   # Opened before the browser work so the browser outcome has somewhere to land.
   # Two mutually exclusive actions rather than one, because the install mode is

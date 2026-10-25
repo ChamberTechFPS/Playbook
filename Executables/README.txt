@@ -12,11 +12,14 @@ the playbook into .apbx format:
    - Place the extracted folder here as: DirectX/DXSETUP.exe
    - Final path: Executables/DirectX/DXSETUP.exe
 
-2. Visual C++ Redistributables All-in-One
+2. Visual C++ Redistributables All-in-One (optional)
    - Download the "Visual C++ Redistributable Runtimes All-in-One"
      package (covers 2005, 2008, 2010, 2012, 2013, 2015-2022)
    - Rename or repackage as: vcredist_all.exe
    - Final path: Executables/vcredist_all.exe
+   - Only needed for the legacy 2005-2013 runtimes. The 2015-2022
+     runtimes (x64 + x86) are always installed by
+     Install-VCRedist.ps1, which downloads them from Microsoft.
 
 IMPORTANT: If these files are not present, the playbook will
 skip their installation and continue normally. Game launchers
