@@ -3,7 +3,7 @@
 All notable changes to Chamber Playbook are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com); versions follow [SemVer](https://semver.org).
 
-## [1.3.3] - Unreleased
+## [1.3.3] - 2026-10-25
 
 ### Fixed
 - **The VC++ runtimes needed a network connection.** Since 1.3.2 an ISO install downloaded them during the OOBE, which fails on a PC whose Wi-Fi adapter Windows has no built-in driver for. `release.yml` now downloads `VC_redist.x64.exe` and `VC_redist.x86.exe` from Microsoft at build time into `Executables/VCRedist/`, so they ship inside the `.apbx` and travel into the image with the rest of the playbook. `Install-VCRedist.ps1` uses them first, still requiring a valid Microsoft signature, and only downloads if they are missing or rejected. The `.apbx` grows by about 25 MB. The binaries are not committed to the repository.
