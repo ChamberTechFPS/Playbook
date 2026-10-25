@@ -65,7 +65,7 @@ Chamber Playbook is an [AME Wizard](https://ameliorated.io) playbook that turns 
 
 ## Installation
 
-1. Download the latest `Chamber.apbx` from the [**Releases**](https://github.com/ChamberTechFPS/Chamber-Playbook/releases) page.
+1. Download the latest `Chamber.apbx` from the [**Releases**](https://github.com/ChamberTechFPS/Playbook/releases) page.
 2. Download and open **AME Wizard** from [ameliorated.io](https://ameliorated.io).
 3. Drag `Chamber.apbx` into AME Wizard.
 4. Follow the on-screen options and let it run.
@@ -79,7 +79,7 @@ Chamber supports AME Wizard's ISO injection, which bakes the playbook into a Win
 
 > ⚠️ **Experimental.** ISO injection has passed static validation but not the full build-and-boot matrix (26100, 26200, 26300 × Chrome / Brave / Skip, online and offline). Until it has, treat an injected install as something to test on a spare machine or a VM — not as the way you set up a PC you are handing to someone. The traditional drag-and-drop path is unchanged and fully supported.
 
-> ⚠️ **Requires Chamber v1.3.0 or later.** ISO injection is declared in `playbook.conf`, so AME Wizard only offers it for builds that carry that declaration. Earlier releases — v1.2.6 and below — do not, and AME will simply not list Chamber on its injection playbook screen. If Chamber does not appear there, you are on an older `.apbx`; download the current one from [Releases](https://github.com/ChamberTechFPS/Chamber-Playbook/releases).
+> ⚠️ **Requires Chamber v1.3.0 or later.** ISO injection is declared in `playbook.conf`, so AME Wizard only offers it for builds that carry that declaration. Earlier releases — v1.2.6 and below — do not, and AME will simply not list Chamber on its injection playbook screen. If Chamber does not appear there, you are on an older `.apbx`; download the current one from [Releases](https://github.com/ChamberTechFPS/Playbook/releases).
 
 **x64 only.** Chamber does not support ARM64 — the cached browser payloads are x64 builds, and the tweaks are untested there. AME may not stop you selecting an ARM64 ISO; do not. If you do, Chamber's first action detects ARM64 at first boot and halts before changing anything, so the result is an unmodified Windows install — how AME's OOBE screen presents that halt has not been tested.
 
