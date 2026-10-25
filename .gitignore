@@ -34,5 +34,3 @@ PostInstall/tools/*.zip
 # Configuration/Tasks/0-iso-cache.yml on the machine building the ISO - vendor
 # binaries, several hundred MB, never source.
 Executables/Browsers/
-# Same, for the VC++ runtimes cached by 0-iso-cache.yml.
-Executables/Runtimes/

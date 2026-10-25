@@ -8,16 +8,15 @@ Every install from a published .apbx skipped the step, and apps built against
 the v14 runtime - the NVIDIA App among them - failed at launch looking for
 VCRUNTIME140.dll, VCRUNTIME140_1.dll or MSVCP140.dll.
 
-Source order, per architecture:
-  1. The payload Tasks/0-iso-cache.yml cached into the image at ISO injection
-     (Executables\Runtimes\). Present only on an injected install.
-  2. Microsoft's permanent download link, fetched now. A traditional run has
-     internet (it uses winget for the browser), and an injected OOBE is gated on
-     a connection by <Internet>Force</Internet>.
+The installers are downloaded from Microsoft's permanent links at run time. A
+traditional run has internet (it uses winget for the browser), and an injected
+OOBE is gated on a connection by <Internet>Force</Internet>. They are not
+cached at ISO injection: AME requires every cached !download to have a
+<Software> tile, and 1.3.1's untiled VC++ downloads crashed its ISO page.
 
-Whatever the source, the installer must carry a valid Authenticode signature
-from Microsoft before it runs - the same rule Install-CachedBrowser.ps1 applies
-to browser payloads (NFR-003).
+The installer must carry a valid Authenticode signature from Microsoft before
+it runs - the same rule Install-CachedBrowser.ps1 applies to browser payloads
+(NFR-003).
 
 The script always exits 0. A missing runtime is fixable afterwards from
 Microsoft's download page; a stalled OOBE is not (NFR-001).
@@ -31,10 +30,6 @@ param()
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# FileName must match the `destination:` in 0-iso-cache.yml -
-# validate_playbook_conf.py fails the build when a cached payload has no
-# matching name in an Executables script.
-#
 # RegistryKeys is the installer's own "installed" marker. The bundle is 32-bit,
 # so on x64 Windows both architectures land under WOW6432Node; the native path
 # is checked too in case that ever changes.
@@ -89,16 +84,6 @@ function Test-TrustedPayload {
 
 function Get-RuntimePayload {
     param([string]$Arch, [hashtable]$Spec)
-
-    $cached = Join-Path $PSScriptRoot (Join-Path 'Runtimes' $Spec.FileName)
-    if (Test-Path -LiteralPath $cached) {
-        $problem = Test-TrustedPayload -Path $cached
-        if (-not $problem) {
-            Write-Host "  Using the cached ISO payload: $cached"
-            return $cached
-        }
-        Write-Host "  [WARN] Cached payload rejected ($problem); downloading instead."
-    }
 
     $target = Join-Path $DownloadDir $Spec.FileName
     try {

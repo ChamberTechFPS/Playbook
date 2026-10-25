@@ -3,7 +3,15 @@
 All notable changes to Chamber Playbook are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com); versions follow [SemVer](https://semver.org).
 
+## [1.3.2] - Unreleased
+
+### Fixed
+- **ISO injection crashed in 1.3.1.** Pressing *Select* on AME Wizard's ISO page failed with `InvalidOperationException: Sequence contains no matching element`. 1.3.1 added two `!download` actions for the VC++ runtimes whose `package:` names had no `<Software>` entry in `playbook.conf`, and AME looks up every download's package among those entries. The downloads are removed. `Install-VCRedist.ps1` now always downloads the runtimes from Microsoft at run time; an injected OOBE already requires internet (`<Internet>Force</Internet>`).
+- `validate_playbook_conf.py` now fails the build when a `!download` has no `<Software>` package of the same name, and again requires `option:` on every cached download. The `aka.ms` host exception added in 1.3.1 is reverted.
+
 ## [1.3.1] - 2026-10-25
+
+> ISO injection is broken in this release - use 1.3.2. Traditional runs are unaffected.
 
 ### Fixed
 - **The Visual C++ runtimes were never installed.** Phase 10 only ran `Executables/vcredist_all.exe`, which is git-ignored, so the released `.apbx` never contained it and the step skipped on every install. Apps built on the v14 runtime then failed at launch — the NVIDIA App reported `VCRUNTIME140.dll`, `VCRUNTIME140_1.dll` and `MSVCP140.dll` missing. The new `Executables/Install-VCRedist.ps1` installs the Visual C++ 2015-2022 runtimes (x64 and x86) on every run. An injected install uses the copies `0-iso-cache.yml` now caches into the image; otherwise it downloads them from Microsoft. Either way it requires a valid Microsoft signature before running them, and it always exits 0. `vcredist_all.exe` is still run first when present, for the 2005-2013 runtimes.

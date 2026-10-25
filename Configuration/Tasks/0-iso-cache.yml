@@ -2,8 +2,7 @@ title: ISO Cache
 # The only task that runs at ISO injection time. Nothing here touches the live
 # system: AME downloads the selected browser installer on the machine building
 # the ISO and stores it inside the image, so first boot has a payload to install
-# from instead of reaching for winget and the network. The Visual C++ runtimes
-# are cached the same way, unconditionally.
+# from instead of reaching for winget and the network.
 #
 # main.yml includes this file with `iso: only`, and every action below repeats
 # `iso: only` / `oobe: false` rather than relying on that. AME checks staging on
@@ -15,8 +14,8 @@ title: ISO Cache
 # AME skips a download whose destination already exists (no `overwrite:`), so
 # the payload must not ship inside the .apbx - see the packaging command.
 #
-# `option:` gates each browser download, so browser-skip caches nothing (PRD
-# FR-022) and a Chrome ISO never carries the Brave payload. `cpuArch: X64` is compared with
+# `option:` gates each download, so browser-skip caches nothing (PRD FR-022) and
+# a Chrome ISO never carries the Brave payload. `cpuArch: X64` is compared with
 # the ISO's architecture, so an ARM64 image caches nothing.
 #
 # `package:` links each download to its <Software> Package <Name> in
@@ -62,26 +61,8 @@ actions:
   # browser-skip has no action here by design. Nothing is downloaded, nothing is
   # cached, and 10-finalize installs nothing for it.
 
-  # Visual C++ 2015-2022 runtimes, x64 and x86. Not optional, so no `option:`,
-  # and no <Software> tile - nobody chooses these. Install-VCRedist.ps1 installs
-  # them in 10-finalize, verifying the Microsoft signature first, and downloads
-  # them itself if this cache is missing.
-  #
-  # aka.ms is Microsoft's permanent link for the latest v14 build; it redirects
-  # to download.visualstudio.microsoft.com, and the versioned URL behind it
-  # changes with every release.
-  - !download:
-      package: 'vcredist-x64'
-      url: 'https://aka.ms/vc14/vc_redist.x64.exe'
-      destination: 'Runtimes\VC_redist.x64.exe'
-      cpuArch: X64
-      iso: only
-      oobe: false
-
-  - !download:
-      package: 'vcredist-x86'
-      url: 'https://aka.ms/vc14/vc_redist.x86.exe'
-      destination: 'Runtimes\VC_redist.x86.exe'
-      cpuArch: X64
-      iso: only
-      oobe: false
+  # Every !download here must have a <Software> package of the same name.
+  # 1.3.1 cached the VC++ runtimes with packages that had no tile, and AME's ISO
+  # page crashed on "Select" with "Sequence contains no matching element"
+  # (IsoPageView.SelectSelectButton_OnClick). The runtimes are now downloaded
+  # during the OOBE by Install-VCRedist.ps1 instead.

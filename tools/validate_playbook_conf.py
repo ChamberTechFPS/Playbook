@@ -17,10 +17,10 @@ mistakes are the expensive kind: they do not fail at load, they fail on a
 machine somebody has already booted.
 
   - `!task:` paths resolve, and every task file has a title and an actions list
-  - each <Software> package has a matching !download gated on the same, real
-    feature option
-  - cached downloads are HTTPS from a vendor-owned host, with a package name,
-    a destination and cpuArch X64, staged `iso: only`/`oobe: false`
+  - <Software> packages and !download packages pair one-to-one, gated on the
+    same, real feature option
+  - cached downloads are HTTPS from a vendor-owned host, with an option, a
+    package name, a destination and cpuArch X64, staged `iso: only`/`oobe: false`
   - every cached payload is one an Executables script knows how to install
   - winget and shutdown.exe actions are `oobe: false`, so neither reaches an
     injected OOBE
@@ -77,11 +77,7 @@ PROP_RE = re.compile(r"^(\w+):\s*(.*)$")
 # Windows setup with nobody watching, so the source is pinned to release hosts
 # the vendor itself controls - not a mirror, not a shortener, not a CDN whose
 # namespace someone else can write to (NFR-003).
-#
-# aka.ms is a shortener, but a Microsoft-owned one, and it is the only stable
-# URL Microsoft publishes for the latest VC++ runtime. Install-VCRedist.ps1
-# requires a Microsoft signature before running what it points at.
-VENDOR_HOSTS = {"dl.google.com", "github.com", "brave.com", "aka.ms"}
+VENDOR_HOSTS = {"dl.google.com", "github.com", "brave.com"}
 
 # $ChamberVersion in Executables/Write-ChamberReceipt.ps1.
 RECEIPT_VERSION_RE = re.compile(r"\$ChamberVersion\s*=\s*'([^']+)'")
@@ -341,10 +337,7 @@ def check_iso_cache(root, errors):
             )
             continue
 
-        # `option` is not required here: the VC++ runtimes are cached
-        # unconditionally. A download backing a <Software> tile must carry its
-        # option - _check_software_pairing enforces that.
-        for required in ("package", "url", "destination"):
+        for required in ("option", "package", "url", "destination"):
             if not props.get(required):
                 errors.append(f"{where}: !download is missing `{required}`.")
 
@@ -384,6 +377,19 @@ def check_iso_cache(root, errors):
 def _check_software_pairing(root, downloads, errors):
     """Tie <Software> tiles, cached payloads and the OOBE installer together."""
     if root is not None:
+        # The reverse direction is a hard AME requirement, not style: AME's ISO
+        # page looks up each !download's package among the <Software> packages
+        # with First(), so a download with no tile crashes the "Select" step
+        # with "Sequence contains no matching element". 1.3.1 shipped that.
+        tile_names = {text_of(p, "Name") for p in root.findall("Software/Package")}
+        for pkg in downloads:
+            if pkg not in tile_names:
+                errors.append(
+                    f"!download package {pkg!r} in Configuration/Tasks/"
+                    "0-iso-cache.yml has no <Software> Package of that name. "
+                    "AME's ISO page crashes on Select with 'Sequence contains "
+                    "no matching element'."
+                )
         option_names = [
             (o.findtext("Name") or "").strip()
             for o in root.findall("FeaturePages/*/Options/*")
