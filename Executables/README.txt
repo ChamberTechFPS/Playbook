@@ -19,7 +19,18 @@ the playbook into .apbx format:
    - Final path: Executables/vcredist_all.exe
    - Only needed for the legacy 2005-2013 runtimes. The 2015-2022
      runtimes (x64 + x86) are always installed by
-     Install-VCRedist.ps1, which downloads them from Microsoft.
+     Install-VCRedist.ps1 - see VCRedist/ below.
+
+3. Visual C++ 2015-2022 runtimes (VCRedist/)
+   - The release build downloads these automatically. For a local
+     build, download them yourself:
+       https://aka.ms/vc14/vc_redist.x64.exe
+       https://aka.ms/vc14/vc_redist.x86.exe
+   - Final paths: Executables/VCRedist/VC_redist.x64.exe
+                  Executables/VCRedist/VC_redist.x86.exe
+   - Bundled so the runtimes install with no network, e.g. during
+     an ISO install on a PC whose Wi-Fi driver is missing. Without
+     them the script downloads at run time instead.
 
 IMPORTANT: If these files are not present, the playbook will
 skip their installation and continue normally. Game launchers

@@ -49,6 +49,26 @@ jobs:
             exit 1
           fi
 
+      # Bundled so the runtimes install with no network at all - an injected
+      # OOBE on a PC whose Wi-Fi driver Windows does not ship has none. Fetched
+      # here rather than committed: they are Microsoft binaries (redistributable
+      # under the Visual Studio license), and the build always takes the latest
+      # v14 release. Install-VCRedist.ps1 checks the Microsoft signature before
+      # running them; this only refuses an error page or truncated download.
+      - name: Fetch Visual C++ runtimes
+        run: |
+          mkdir -p Executables/VCRedist
+          for arch in x64 x86; do
+            out="Executables/VCRedist/VC_redist.$arch.exe"
+            curl -fsSL --retry 3 -o "$out" "https://aka.ms/vc14/vc_redist.$arch.exe"
+            size=$(stat -c %s "$out")
+            if [ "$size" -lt 1048576 ] || [ "$(head -c 2 "$out")" != "MZ" ]; then
+              echo "::error::$out is not an installer ($size bytes)"
+              exit 1
+            fi
+            echo "$out: $size bytes"
+          done
+
       - name: Package .apbx
         run: |
           # AME Wizard expects playbook.conf at archive root — package contents,
@@ -81,6 +101,8 @@ jobs:
               Executables/Write-ChamberReceipt.ps1 \
               Executables/Disable-BitLockerEncryption.ps1 \
               Executables/Install-VCRedist.ps1 \
+              Executables/VCRedist/VC_redist.x64.exe \
+              Executables/VCRedist/VC_redist.x86.exe \
               Images/chrome.png \
               Images/brave.png \
               PostInstall/Welcome.html \

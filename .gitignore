@@ -16,6 +16,8 @@ files.zip
 # Redistributable payloads - place locally before packaging, do not commit
 Executables/DirectX/
 Executables/vcredist_all.exe
+# VC++ 2015-2022 runtimes - release.yml downloads them from Microsoft at build time.
+Executables/VCRedist/
 
 # Driver/tool downloads users drop into PostInstall locally - not part of the repo.
 # Web shortcuts (.url), NVIDIA profiles, and the profile inspector ARE part of the

@@ -8,15 +8,22 @@ Every install from a published .apbx skipped the step, and apps built against
 the v14 runtime - the NVIDIA App among them - failed at launch looking for
 VCRUNTIME140.dll, VCRUNTIME140_1.dll or MSVCP140.dll.
 
-The installers are downloaded from Microsoft's permanent links at run time. A
-traditional run has internet (it uses winget for the browser), and an injected
-OOBE is gated on a connection by <Internet>Force</Internet>. They are not
-cached at ISO injection: AME requires every cached !download to have a
-<Software> tile, and 1.3.1's untiled VC++ downloads crashed its ISO page.
+Source order, per architecture:
+  1. The copy bundled in the .apbx at Executables\VCRedist\, which
+     release.yml downloads from Microsoft at build time. It travels with the
+     playbook into an injected image, so this works with no network at all -
+     a PC whose Wi-Fi driver Windows does not ship has none during the OOBE.
+  2. Microsoft's permanent download link, fetched now. Only reached by a local
+     build packaged without the bundle, or a bundled copy that fails the
+     signature check.
 
-The installer must carry a valid Authenticode signature from Microsoft before
-it runs - the same rule Install-CachedBrowser.ps1 applies to browser payloads
-(NFR-003).
+Not cached with a !download at ISO injection: AME requires every cached
+download to have a <Software> tile, and 1.3.1's untiled VC++ downloads crashed
+its ISO page.
+
+Whatever the source, the installer must carry a valid Authenticode signature
+from Microsoft before it runs - the same rule Install-CachedBrowser.ps1 applies
+to browser payloads (NFR-003).
 
 The script always exits 0. A missing runtime is fixable afterwards from
 Microsoft's download page; a stalled OOBE is not (NFR-001).
@@ -84,6 +91,16 @@ function Test-TrustedPayload {
 
 function Get-RuntimePayload {
     param([string]$Arch, [hashtable]$Spec)
+
+    $bundled = Join-Path $PSScriptRoot (Join-Path 'VCRedist' $Spec.FileName)
+    if (Test-Path -LiteralPath $bundled) {
+        $problem = Test-TrustedPayload -Path $bundled
+        if (-not $problem) {
+            Write-Host "  Using the bundled installer: $bundled"
+            return $bundled
+        }
+        Write-Host "  [WARN] Bundled installer rejected ($problem); downloading instead."
+    }
 
     $target = Join-Path $DownloadDir $Spec.FileName
     try {
