@@ -37,6 +37,7 @@ Minor bump: a new option, a renamed option and several defaults changed.
 ### Changed
 - **A USB (ISO) install no longer needs internet.** `<Internet>` is `Request` instead of `Force`: setup offers a connection but no longer stops without one. The browser and VC++ runtimes are already on the USB, and the steps that go online (winget, the connectivity check) only run on a normal install. Verified with an offline install.
 - **26H2 (build 26300) is verified**, no longer declared ahead of testing.
+- **ISO injection is no longer experimental.** The warning is gone from the README and `docs/ISO-INJECTION.md`.
 - **WSearch, SysMain, TabletInputService and TapiSrv are back at their Windows defaults** (phase 3), written explicitly so an in-place upgrade turns them back on. Neither ReviOS nor AtlasOS disables any of them.
   - WSearch: off made file search in Start and Explorer slow and broke Outlook search. It now pauses during Game Mode instead, and the phase 9 indexer priority demotions finally have a process to apply to.
   - SysMain: no measured gain from turning it off, and it can lengthen load times.

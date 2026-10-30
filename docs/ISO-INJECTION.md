@@ -6,8 +6,6 @@ Useful if you set up more than one PC, or want a fresh Windows install that come
 
 AME Wizard can bake the ChamberTech Playbook into a Windows 11 ISO so it applies during a custom out-of-box experience at first boot instead of being run manually afterwards. Useful if you build more than one machine.
 
-> ⚠️ **Experimental.** ISO injection has passed static validation but not the full build-and-boot matrix (26100, 26200, 26300 × Chrome / Brave / Skip, online and offline). Until it has, treat an injected install as something to test on a spare machine or a VM — not as the way you set up a PC you are handing to someone. The traditional drag-and-drop path is unchanged and fully supported.
-
 > ⚠️ **Requires v1.3.0 or later.** ISO injection is declared in `playbook.conf`, so AME Wizard only offers it for builds that carry that declaration. Earlier releases — v1.2.6 and below — do not, and AME will simply not list the playbook on its injection playbook screen. If the playbook does not appear there, you are on an older `.apbx`; download the current one from [Releases](https://github.com/ChamberTechFPS/Playbook/releases).
 
 **x64 only.** The playbook does not support ARM64 — the cached browser payloads are x64 builds, and the tweaks are untested there. AME may not stop you selecting an ARM64 ISO; do not. If you do, the playbook's first action detects ARM64 at first boot and halts before changing anything, so the result is an unmodified Windows install — how AME's OOBE screen presents that halt has not been tested.

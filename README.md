@@ -73,7 +73,7 @@ The full list, phase by phase, is in [How it works](docs/HOW-IT-WORKS.md).
 
 > 💡 Works best on a fresh Windows install. A PC that's already heavily tweaked can give mixed results.
 
-**Setting up more than one PC?** You can bake the playbook into a Windows USB so it applies during setup. See [Installing from a USB](docs/ISO-INJECTION.md) (experimental).
+**Setting up more than one PC?** You can bake the playbook into a Windows USB so it applies during setup. See [Installing from a USB](docs/ISO-INJECTION.md).
 
 ---
 
