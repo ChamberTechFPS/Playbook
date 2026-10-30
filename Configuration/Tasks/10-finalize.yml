@@ -116,8 +116,8 @@ actions:
   - !cmd:
       exeDir: true
       runas: currentUserElevated
-      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Write-ChamberReceipt.ps1" -AddOption disable-updates'
-      option: 'disable-updates'
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Write-ChamberReceipt.ps1" -AddOption pause-updates'
+      option: 'pause-updates'
       wait: true
       errorAction: Log
 
@@ -126,6 +126,14 @@ actions:
       runas: currentUserElevated
       command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Write-ChamberReceipt.ps1" -AddOption disable-sac'
       option: 'disable-sac'
+      wait: true
+      errorAction: Log
+
+  - !cmd:
+      exeDir: true
+      runas: currentUserElevated
+      command: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Write-ChamberReceipt.ps1" -AddOption block-wu-drivers'
+      option: 'block-wu-drivers'
       wait: true
       errorAction: Log
 

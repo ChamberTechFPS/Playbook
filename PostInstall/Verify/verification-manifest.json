@@ -1,11 +1,18 @@
 {
   "schema": 1,
-  "generatedUtc": "2026-10-15T01:09:46Z",
+  "generatedUtc": "2026-10-22T15:58:53Z",
   "registryValues": [
     {
       "source": "1-power.yml",
       "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerThrottling",
       "value": "PowerThrottlingOff",
+      "type": "REG_DWORD",
+      "data": "1"
+    },
+    {
+      "source": "3-services.yml",
+      "path": "HKLM\\SYSTEM\\CurrentControlSet\\Services\\WSearch",
+      "value": "DelayedAutoStart",
       "type": "REG_DWORD",
       "data": "1"
     },
@@ -43,6 +50,13 @@
       "value": "Win32PrioritySeparation",
       "type": "REG_DWORD",
       "data": "38"
+    },
+    {
+      "source": "4-registry.yml",
+      "path": "HKLM\\SOFTWARE\\Microsoft\\FTH",
+      "value": "Enabled",
+      "type": "REG_DWORD",
+      "data": "0"
     },
     {
       "source": "4-registry.yml",
@@ -102,17 +116,10 @@
     },
     {
       "source": "4-registry.yml",
-      "path": "HKCU\\Control Panel\\Desktop",
-      "value": "AutoEndTasks",
-      "type": "REG_SZ",
-      "data": "1"
-    },
-    {
-      "source": "4-registry.yml",
       "path": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile",
       "value": "NetworkThrottlingIndex",
       "type": "REG_DWORD",
-      "data": "4294967295"
+      "data": "10"
     },
     {
       "source": "4-registry.yml",
@@ -225,6 +232,62 @@
     },
     {
       "source": "5-privacy.yml",
+      "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\WMI\\Autologger\\SetupPlatformTel",
+      "value": "Start",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+      "value": "DoNotShowFeedbackNotifications",
+      "type": "REG_DWORD",
+      "data": "1"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+      "value": "LimitDiagnosticLogCollection",
+      "type": "REG_DWORD",
+      "data": "1"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+      "value": "LimitDumpCollection",
+      "type": "REG_DWORD",
+      "data": "1"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+      "value": "AllowDeviceNameInTelemetry",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Siuf\\Rules",
+      "value": "NumberOfSIUFInPeriod",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment",
+      "value": "DOTNET_CLI_TELEMETRY_OPTOUT",
+      "type": "REG_SZ",
+      "data": "1"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment",
+      "value": "POWERSHELL_TELEMETRY_OPTOUT",
+      "type": "REG_SZ",
+      "data": "1"
+    },
+    {
+      "source": "5-privacy.yml",
       "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo",
       "value": "Enabled",
       "type": "REG_DWORD",
@@ -283,6 +346,27 @@
       "source": "5-privacy.yml",
       "path": "HKCU\\Software\\Policies\\Microsoft\\Windows\\Explorer",
       "value": "DisableSearchBoxSuggestions",
+      "type": "REG_DWORD",
+      "data": "1"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search",
+      "value": "ConnectedSearchUseWeb",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\SearchSettings",
+      "value": "IsDynamicSearchBoxEnabled",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKLM\\SOFTWARE\\Microsoft\\Windows Search\\Gather\\Windows\\SystemIndex",
+      "value": "RespectPowerModes",
       "type": "REG_DWORD",
       "data": "1"
     },
@@ -427,6 +511,20 @@
       "data": "0"
     },
     {
+      "source": "6-debloat.yml",
+      "path": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate\\Orchestrator\\UScheduler\\OutlookUpdate",
+      "value": "workCompleted",
+      "type": "REG_DWORD",
+      "data": "1"
+    },
+    {
+      "source": "6-debloat.yml",
+      "path": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate\\Orchestrator\\UScheduler\\DevHomeUpdate",
+      "value": "workCompleted",
+      "type": "REG_DWORD",
+      "data": "1"
+    },
+    {
       "source": "7-security.yml",
       "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\DeviceGuard",
       "value": "EnableVirtualizationBasedSecurity",
@@ -460,19 +558,81 @@
     },
     {
       "source": "7-security.yml",
-      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
-      "value": "NoAutoUpdate",
+      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate",
+      "value": "TargetReleaseVersion",
       "type": "REG_DWORD",
-      "data": "1",
-      "option": "disable-updates"
+      "data": "1"
     },
     {
       "source": "7-security.yml",
-      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
-      "value": "AUOptions",
+      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate",
+      "value": "ProductVersion",
+      "type": "REG_SZ",
+      "data": "Windows 11"
+    },
+    {
+      "source": "7-security.yml",
+      "path": "HKLM\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings",
+      "value": "FlightSettingsMaxPauseDays",
       "type": "REG_DWORD",
-      "data": "2",
-      "option": "disable-updates"
+      "data": "5269",
+      "option": "pause-updates"
+    },
+    {
+      "source": "7-security.yml",
+      "path": "HKLM\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings",
+      "value": "PauseFeatureUpdatesStartTime",
+      "type": "REG_SZ",
+      "data": "2023-08-17T12:47:51Z",
+      "option": "pause-updates"
+    },
+    {
+      "source": "7-security.yml",
+      "path": "HKLM\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings",
+      "value": "PauseFeatureUpdatesEndTime",
+      "type": "REG_SZ",
+      "data": "2038-01-19T03:14:07Z",
+      "option": "pause-updates"
+    },
+    {
+      "source": "7-security.yml",
+      "path": "HKLM\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings",
+      "value": "PauseQualityUpdatesStartTime",
+      "type": "REG_SZ",
+      "data": "2023-08-17T12:47:51Z",
+      "option": "pause-updates"
+    },
+    {
+      "source": "7-security.yml",
+      "path": "HKLM\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings",
+      "value": "PauseQualityUpdatesEndTime",
+      "type": "REG_SZ",
+      "data": "2038-01-19T03:14:07Z",
+      "option": "pause-updates"
+    },
+    {
+      "source": "7-security.yml",
+      "path": "HKLM\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings",
+      "value": "PauseUpdatesStartTime",
+      "type": "REG_SZ",
+      "data": "2023-08-17T12:47:51Z",
+      "option": "pause-updates"
+    },
+    {
+      "source": "7-security.yml",
+      "path": "HKLM\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings",
+      "value": "PauseUpdatesExpiryTime",
+      "type": "REG_SZ",
+      "data": "2038-01-19T03:14:07Z",
+      "option": "pause-updates"
+    },
+    {
+      "source": "7-security.yml",
+      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate",
+      "value": "ExcludeWUDriversInQualityUpdate",
+      "type": "REG_DWORD",
+      "data": "1",
+      "option": "block-wu-drivers"
     },
     {
       "source": "7-security.yml",
@@ -602,6 +762,27 @@
       "data": "0"
     },
     {
+      "source": "8-configure-windows.yml",
+      "path": "HKCU\\SOFTWARE\\Microsoft\\Multimedia\\Audio",
+      "value": "UserDuckingPreference",
+      "type": "REG_DWORD",
+      "data": "3"
+    },
+    {
+      "source": "8-configure-windows.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\\TaskbarDeveloperSettings",
+      "value": "TaskbarEndTask",
+      "type": "REG_DWORD",
+      "data": "1"
+    },
+    {
+      "source": "8-configure-windows.yml",
+      "path": "HKCU\\Software\\Microsoft\\Lighting",
+      "value": "AmbientLightingEnabled",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
       "source": "9-network.yml",
       "path": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\SearchIndexer.exe\\PerfOptions",
       "value": "CpuPriorityClass",
@@ -659,6 +840,11 @@
     },
     {
       "source": "4-registry.yml",
+      "path": "HKCU\\Control Panel\\Desktop",
+      "value": "AutoEndTasks"
+    },
+    {
+      "source": "4-registry.yml",
       "path": "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
       "value": "TcpNoDelay"
     },
@@ -703,6 +889,16 @@
       "value": "DisableAntiVirus"
     },
     {
+      "source": "7-security.yml",
+      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
+      "value": "NoAutoUpdate"
+    },
+    {
+      "source": "7-security.yml",
+      "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
+      "value": "AUOptions"
+    },
+    {
       "source": "9-network.yml",
       "path": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\sihost.exe\\PerfOptions",
       "value": "CpuPriorityClass"
@@ -741,22 +937,7 @@
     },
     {
       "source": "3-services.yml",
-      "name": "WSearch",
-      "startup": 4
-    },
-    {
-      "source": "3-services.yml",
-      "name": "SysMain",
-      "startup": 4
-    },
-    {
-      "source": "3-services.yml",
       "name": "WMPNetworkSvc",
-      "startup": 4
-    },
-    {
-      "source": "3-services.yml",
-      "name": "TabletInputService",
       "startup": 4
     },
     {
@@ -772,11 +953,6 @@
     {
       "source": "3-services.yml",
       "name": "RemoteRegistry",
-      "startup": 4
-    },
-    {
-      "source": "3-services.yml",
-      "name": "TapiSrv",
       "startup": 4
     },
     {
@@ -818,6 +994,26 @@
       "name": "GamingServices",
       "startup": 4,
       "option": "remove-xbox"
+    },
+    {
+      "source": "3-services.yml",
+      "name": "WSearch",
+      "startup": 2
+    },
+    {
+      "source": "3-services.yml",
+      "name": "SysMain",
+      "startup": 2
+    },
+    {
+      "source": "3-services.yml",
+      "name": "TabletInputService",
+      "startup": 3
+    },
+    {
+      "source": "3-services.yml",
+      "name": "TapiSrv",
+      "startup": 3
     }
   ],
   "scheduledTasks": [
@@ -882,9 +1078,9 @@
         "tolerant": true
       }
     ],
-    "timeout": 0
+    "timeout": 15
   },
-  "hostsEntries": [
+  "hostsRetired": [
     "0.0.0.0 vortex.data.microsoft.com",
     "0.0.0.0 settings-win.data.microsoft.com",
     "0.0.0.0 telemetry.microsoft.com",
@@ -947,5 +1143,22 @@
       "Microsoft.XboxSpeechToTextOverlay"
     ]
   },
-  "unparsedActions": []
+  "unparsedActions": [
+    {
+      "source": "6-debloat.yml",
+      "action": "registryKey",
+      "props": {
+        "path": "HKLM\\SOFTWARE\\Microsoft\\WindowsUpdate\\Orchestrator\\UScheduler_Oobe\\OutlookUpdate",
+        "operation": "delete"
+      }
+    },
+    {
+      "source": "6-debloat.yml",
+      "action": "registryKey",
+      "props": {
+        "path": "HKLM\\SOFTWARE\\Microsoft\\WindowsUpdate\\Orchestrator\\UScheduler_Oobe\\DevHomeUpdate",
+        "operation": "delete"
+      }
+    }
+  ]
 }

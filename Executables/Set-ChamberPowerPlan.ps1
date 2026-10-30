@@ -143,7 +143,7 @@ $baseName = switch ($base) {
     $HighPerfGuid { 'High Performance' }
     default       { 'Balanced' }
 }
-Invoke-PowerCfg @('-changename', $ChamberGuid, 'Chamber', "Chamber gaming plan ($hwProfile, based on $baseName)") | Out-Null
+Invoke-PowerCfg @('-changename', $ChamberGuid, 'ChamberTech', "ChamberTech gaming plan ($hwProfile, based on $baseName)") | Out-Null
 
 # Latency values every profile gets. A USB device waking from selective suspend
 # (mouse, keyboard, headset DAC) and a PCIe link climbing out of ASPM L1 both add

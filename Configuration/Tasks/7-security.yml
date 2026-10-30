@@ -53,24 +53,122 @@ actions:
       value: 'DisableAntiVirus'
       operation: delete
 
-  - !status: {status: 'Step 6 of 8: Switching Windows Update to notify-only', option: 'disable-updates'}
+  - !status: {status: 'Step 6 of 8: Staying on this version of Windows 11'}
 
-  # Notify-only: no background downloads/installs, but Store and Xbox still
-  # use the update/download stack. wuauserv and UsoSvc intentionally left at
-  # defaults (Manual/Automatic) so Store + Xbox downloads keep working.
+  # Feature release pin, applied to every install. Monthly security and quality
+  # updates keep coming; Windows just will not move to the next yearly release
+  # (25H2 -> 26H2, say) on its own, which is what resets Chamber's settings and
+  # brings removed apps back. The pin is the release the PC is on, raised to
+  # 25H2 at minimum: 24H2 Home and Pro left servicing on 2026-10-13, and
+  # pinning there would stop security updates, so a 24H2 PC moves to 25H2 (a
+  # small enablement package on the same servicing branch).
+  # ponytail: floor hardcoded to 25H2. Raise it before 25H2 Home/Pro leaves
+  # servicing (October 2027), or when a new release is validated.
+  # Honoured on Pro, Enterprise and Education; Windows 11 Home may ignore it.
+  # Rollback: delete TargetReleaseVersion, ProductVersion and
+  # TargetReleaseVersionInfo under Policies\Microsoft\Windows\WindowsUpdate.
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate'
+      value: 'TargetReleaseVersion'
+      type: REG_DWORD
+      data: '1'
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate'
+      value: 'ProductVersion'
+      type: REG_SZ
+      data: 'Windows 11'
+
+  # The release name has to be read from the PC, so it is a script, not a
+  # !registryValue. Runs after the two values above, so the key exists.
+  - !cmd:
+      command: 'powershell -NoProfile -Command "$k=''HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate''; $v=(Get-ItemProperty ''HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'').DisplayVersion; if(-not $v){Write-Host ''No DisplayVersion found - feature release not pinned''; exit 0}; if($v -lt ''25H2''){$v=''25H2''}; if(-not (Test-Path $k)){New-Item -Path $k | Out-Null}; Set-ItemProperty -Path $k -Name TargetReleaseVersionInfo -Value $v -Type String; Write-Host (''Feature release pinned to '' + $v)"'
+      wait: true
+      errorAction: Log
+
+  - !status: {status: 'Step 6 of 8: Pausing Windows Updates', option: 'pause-updates'}
+
+  # Windows' own pause, extended to 2038 - the same values ReviOS's Revision
+  # Tool writes. Settings > Windows Update shows "Updates paused until 2038"
+  # with a Resume button, so the user can turn updates back on without a
+  # registry edit, and Settings does not say the PC is managed.
+  # FlightSettingsMaxPauseDays raises the pause limit so the long dates stick.
+  # Store and Xbox downloads are not affected.
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings'
+      value: 'FlightSettingsMaxPauseDays'
+      type: REG_DWORD
+      data: '5269'
+      option: 'pause-updates'
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings'
+      value: 'PauseFeatureUpdatesStartTime'
+      type: REG_SZ
+      data: '2023-08-17T12:47:51Z'
+      option: 'pause-updates'
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings'
+      value: 'PauseFeatureUpdatesEndTime'
+      type: REG_SZ
+      data: '2038-01-19T03:14:07Z'
+      option: 'pause-updates'
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings'
+      value: 'PauseQualityUpdatesStartTime'
+      type: REG_SZ
+      data: '2023-08-17T12:47:51Z'
+      option: 'pause-updates'
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings'
+      value: 'PauseQualityUpdatesEndTime'
+      type: REG_SZ
+      data: '2038-01-19T03:14:07Z'
+      option: 'pause-updates'
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings'
+      value: 'PauseUpdatesStartTime'
+      type: REG_SZ
+      data: '2023-08-17T12:47:51Z'
+      option: 'pause-updates'
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings'
+      value: 'PauseUpdatesExpiryTime'
+      type: REG_SZ
+      data: '2038-01-19T03:14:07Z'
+      option: 'pause-updates'
+
+  # Retired in 1.4.0: the notify-only policy earlier versions set for this
+  # option. Not gated, so an upgrade removes it whether or not the option is
+  # picked again.
   - !registryValue:
       path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU'
       value: 'NoAutoUpdate'
-      type: REG_DWORD
-      data: '1'
-      option: 'disable-updates'
+      operation: delete
 
   - !registryValue:
       path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU'
       value: 'AUOptions'
+      operation: delete
+
+  - !status: {status: 'Step 6 of 8: Keeping Windows Update away from your drivers', option: 'block-wu-drivers'}
+
+  # Stops Windows Update offering drivers, so it cannot replace a GPU driver the
+  # user installed with an older WHQL one. Side effect: chipset, Wi-Fi and
+  # network drivers stop arriving that way too - the Driver Setup page covers
+  # them. Off by default because on a USB install a PC whose Wi-Fi needs a
+  # Windows Update driver would come up with no Wi-Fi.
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate'
+      value: 'ExcludeWUDriversInQualityUpdate'
       type: REG_DWORD
-      data: '2'
-      option: 'disable-updates'
+      data: '1'
+      option: 'block-wu-drivers'
 
   - !status: {status: 'Step 6 of 8: Turning off drive encryption', option: 'disable-bitlocker'}
 

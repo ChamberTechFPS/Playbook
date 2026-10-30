@@ -23,11 +23,13 @@ jobs:
       # at load time; they show up on a machine somebody has already booted.
       #
       # On a tag build it also asserts playbook.conf's <Version> matches the tag;
-      # v1.2.5 shipped declaring 1.2.4 without this.
+      # v1.2.5 shipped declaring 1.2.4 without this. A prerelease tag carries a
+      # suffix (v1.4.0-beta.1) that AME's version format cannot, so the suffix is
+      # dropped before comparing: <Version> stays 1.4.0 through the betas.
       - name: Validate playbook.conf and ISO injection config
         run: |
           if [ "${{ startsWith(github.ref, 'refs/tags/') }}" = "true" ]; then
-            python3 tools/validate_playbook_conf.py --expect-version "$GITHUB_REF_NAME"
+            python3 tools/validate_playbook_conf.py --expect-version "${GITHUB_REF_NAME%%-*}"
           else
             python3 tools/validate_playbook_conf.py
           fi
@@ -122,10 +124,44 @@ jobs:
             | sort -z | xargs -0 sha256sum >> SHA256SUMS.txt
           cat SHA256SUMS.txt
 
+      # Release notes a gamer can read: install steps first, then this version's
+      # CHANGELOG section. The CHANGELOG is the single source, so the notes can't
+      # drift from it. A tag with a suffix (v1.4.0-beta.1) is a prerelease: it
+      # gets a warning here and the prerelease flag below, which also keeps it
+      # off /releases/latest - the link the README and AME's update check use.
+      - name: Write release notes
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          ver="${GITHUB_REF_NAME#v}"; ver="${ver%%-*}"
+          section=$(awk -v v="$ver" 'index($0, "## [" v "]") == 1 {f=1; next} /^## \[/ {if (f) exit} f' CHANGELOG.md)
+          if [ -z "$section" ]; then
+            echo "::error::CHANGELOG.md has no '## [$ver]' section for this tag."
+            exit 1
+          fi
+          {
+            if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+              echo "> ⚠️ **Pre-release.** Not yet tested on every Windows build. Try it on a spare PC or a VM, or wait for the full release."
+              echo
+            fi
+            echo "### Install"
+            echo "1. Download **Chamber.apbx** below."
+            echo "2. Open [AME Wizard](https://ameliorated.io) and drag the file in."
+            echo "3. Pick your options and let it run. [Video walkthrough](https://youtu.be/jzM9MHyzCiI)"
+            echo
+            echo "New here? Start with the [README](https://github.com/${GITHUB_REPOSITORY}#readme). Check your download against \`SHA256SUMS.txt\`."
+            echo
+            echo "## What's new in $ver"
+            echo "$section"
+          } > RELEASE_NOTES.md
+          cat RELEASE_NOTES.md
+
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          name: ChamberTech Playbook ${{ github.ref_name }}
+          body_path: RELEASE_NOTES.md
+          prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
             Chamber.apbx
             SHA256SUMS.txt

@@ -52,7 +52,7 @@ function Add-Check {
 
 Write-Host ''
 Write-Host ('=' * 60) -ForegroundColor DarkMagenta
-Write-Host '  CHAMBER - SYSTEM VERIFICATION' -ForegroundColor Magenta
+Write-Host '  CHAMBERTECH PLAYBOOK - CHECK YOUR PC' -ForegroundColor Magenta
 Write-Host ('=' * 60) -ForegroundColor DarkMagenta
 Write-Host '  Read-only. No changes will be made.' -ForegroundColor DarkGray
 Write-Host ''
@@ -214,15 +214,17 @@ if ($manifest) {
         Add-Check 'WARN' 'BCD' 'BCD flags' "Could not run bcdedit: $($_.Exception.Message)"
     }
 
-    # --- Hosts telemetry blocks ----------------------------------------------
+    # --- Retired hosts entries -----------------------------------------------
+    # Older Chamber versions blocked telemetry in the hosts file. 1.4.0 removes
+    # those lines (Defender flags them as HostsFileHijack), so they should be gone.
     try {
         $hostsPath = Join-Path $env:SystemRoot 'System32\drivers\etc\hosts'
-        $hostsText = if (Test-Path -LiteralPath $hostsPath) { Get-Content -LiteralPath $hostsPath -Raw } else { '' }
-        $missing = @($manifest.hostsEntries | Where-Object { $hostsText -notmatch [regex]::Escape($_) })
-        if ($missing.Count -eq 0) { Add-Check 'PASS' 'Privacy' 'Hosts telemetry blocks' "$(@($manifest.hostsEntries).Count) entries present" }
-        else { Add-Check 'FAIL' 'Privacy' 'Hosts telemetry blocks' "$($missing.Count) missing: $($missing -join ', ')" }
+        $hostsLines = if (Test-Path -LiteralPath $hostsPath) { @(Get-Content -LiteralPath $hostsPath | ForEach-Object { $_.Trim() }) } else { @() }
+        $leftover = @($manifest.hostsRetired | Where-Object { $hostsLines -contains $_ })
+        if ($leftover.Count -eq 0) { Add-Check 'PASS' 'Privacy' 'Old hosts telemetry blocks' 'none left over from earlier Chamber versions' }
+        else { Add-Check 'WARN' 'Privacy' 'Old hosts telemetry blocks' "$($leftover.Count) still present - re-run Chamber or Restore-Chamber.ps1 -Scope hosts -Apply" }
     } catch {
-        Add-Check 'WARN' 'Privacy' 'Hosts telemetry blocks' 'Could not read hosts file'
+        Add-Check 'WARN' 'Privacy' 'Old hosts telemetry blocks' 'Could not read hosts file'
     }
 
     # --- Debloat --------------------------------------------------------------

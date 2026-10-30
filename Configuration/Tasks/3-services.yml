@@ -27,18 +27,6 @@ actions:
       operation: change
       startup: 4
 
-  - !status: {status: 'Step 2 of 8: Turning off disk-heavy background services'}
-
-  - !service:
-      name: 'WSearch'
-      operation: change
-      startup: 4
-
-  - !service:
-      name: 'SysMain'
-      operation: change
-      startup: 4
-
   - !status: {status: 'Step 2 of 8: Turning off background network services'}
 
   - !service:
@@ -47,11 +35,6 @@ actions:
       startup: 4
 
   - !status: {status: 'Step 2 of 8: Turning off services a gaming PC does not need'}
-
-  - !service:
-      name: 'TabletInputService'
-      operation: change
-      startup: 4
 
   - !service:
       name: 'MapsBroker'
@@ -65,11 +48,6 @@ actions:
 
   - !service:
       name: 'RemoteRegistry'
-      operation: change
-      startup: 4
-
-  - !service:
-      name: 'TapiSrv'
       operation: change
       startup: 4
 
@@ -112,6 +90,48 @@ actions:
       operation: change
       startup: 4
       option: 'remove-xbox'
+
+  - !status: {status: 'Step 2 of 8: Keeping search and typing services on'}
+
+  # Retired in 1.4.0: these four were disabled by earlier Chamber versions.
+  # They are written back to their Windows defaults so an in-place upgrade
+  # turns them on again; on a fresh install this changes nothing.
+  #   WSearch            Start and File Explorer search, Outlook search. It now
+  #                      pauses during Game Mode instead (RespectPowerModes,
+  #                      phase 5), which is what keeps it out of matches.
+  #   SysMain            Preloads frequently used apps and games into spare RAM
+  #                      and manages memory compression. Disabling it had no
+  #                      measured gain and can lengthen load times.
+  #   TabletInputService Emoji panel (Win+.), clipboard history (Win+V), the touch
+  #                      keyboard and Chinese/Japanese/Korean input.
+  #   TapiSrv            Telephony. Manual start, so it costs nothing until a
+  #                      dial-up, PPPoE or built-in VPN connection asks for it.
+  - !service:
+      name: 'WSearch'
+      operation: change
+      startup: 2
+
+  # Windows ships WSearch as Automatic (Delayed Start).
+  - !registryValue:
+      path: 'HKLM\SYSTEM\CurrentControlSet\Services\WSearch'
+      value: 'DelayedAutoStart'
+      type: REG_DWORD
+      data: '1'
+
+  - !service:
+      name: 'SysMain'
+      operation: change
+      startup: 2
+
+  - !service:
+      name: 'TabletInputService'
+      operation: change
+      startup: 3
+
+  - !service:
+      name: 'TapiSrv'
+      operation: change
+      startup: 3
 
   - !status: {status: 'Step 2 of 8: Turning off telemetry scheduled tasks'}
 

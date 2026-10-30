@@ -1,21 +1,37 @@
 @echo off
-title Chamber - Post-Install
+title ChamberTech Playbook - Tools
+
+rem Verify reads, and Restore writes, system settings. Both need an elevated
+rem prompt, so stop here with instructions rather than fail halfway through.
+net session >nul 2>&1
+if errorlevel 1 (
+    echo.
+    echo   This needs administrator rights.
+    echo   Close this window, right-click START-HERE.bat and choose
+    echo   "Run as administrator".
+    echo.
+    pause
+    exit /b 1
+)
+
 :menu
 cls
 echo.
 echo   ============================================
-echo     CHAMBER - POST-INSTALL
+echo     CHAMBERTECH PLAYBOOK - TOOLS
 echo   ============================================
 echo.
-echo    [1]  Verify system (checks every tweak)
-echo    [2]  Verify + create support report zip
-echo    [3]  Open Drivers folder
+echo    [W]  Driver setup page (start here after install)
+echo    [3]  Open the Drivers folder
 echo    [4]  Read the guide
-echo    [W]  Open the driver setup page
 echo.
-echo    --- Undo -----------------------------------
-echo    [5]  Preview restore (shows changes, changes nothing)
-echo    [6]  Restore system (undoes the playbook)
+echo    --- Check -----------------------------------
+echo    [1]  Check my PC (every playbook setting)
+echo    [2]  Check my PC + make a support report
+echo.
+echo    --- Undo ------------------------------------
+echo    [5]  Preview undo (shows what would change)
+echo    [6]  Undo the playbook
 echo.
 echo    [Q]  Quit
 echo.
@@ -34,7 +50,7 @@ goto menu
 cls
 echo.
 echo   ============================================
-echo     CHAMBER - RESTORE SYSTEM
+echo     CHAMBERTECH PLAYBOOK - UNDO
 echo   ============================================
 echo.
 echo    This undoes what the playbook applied: registry tweaks, service
@@ -54,8 +70,8 @@ echo    Option [5] on the main menu previews all of this without changing
 echo    a thing. Run that first if you have not already.
 echo.
 echo    --------------------------------------------
-echo    [1]  Restore now
-echo    [2]  Restore, including HAGS and Xbox
+echo    [1]  Undo now
+echo    [2]  Undo, including HAGS and Xbox
 echo    [B]  Back to menu
 echo.
 set /p rchoice="   Select: "
