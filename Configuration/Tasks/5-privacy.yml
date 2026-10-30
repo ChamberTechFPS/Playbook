@@ -257,6 +257,67 @@ actions:
       type: REG_DWORD
       data: '0'
 
+  # The full-screen "Let's finish setting up your device" page that Windows
+  # shows after updates, pushing Microsoft 365, OneDrive and Game Pass. From
+  # ReviOS and AtlasOS.
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\UserProfileEngagement'
+      value: 'ScoobeSystemSettingEnabled'
+      type: REG_DWORD
+      data: '0'
+
+  - !status: {status: 'Step 4 of 8: Turning off typing, speech and tailored data'}
+
+  # The remaining switches under Settings > Privacy & security > General,
+  # Speech and Inking & typing. Windows' own OOBE privacy screen writes several
+  # of these when the account is created, which is after AME's run on an
+  # injected install; Complete-ChamberSetup.ps1 re-applies them at first
+  # sign-in from the manifest. From ReviOS and AtlasOS.
+
+  # Tailored experiences: tips and offers based on diagnostic data.
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Privacy'
+      value: 'TailoredExperiencesWithDiagnosticDataEnabled'
+      type: REG_DWORD
+      data: '0'
+
+  # Let websites show locally relevant content by reading the language list.
+  - !registryValue:
+      path: 'HKCU\Control Panel\International\User Profile'
+      value: 'HttpAcceptLanguageOptOut'
+      type: REG_DWORD
+      data: '1'
+
+  # Inking and typing personalization: Windows collects what you type and
+  # write to build a personal dictionary, and sends it to Microsoft when
+  # TIPC is on. Spell check and text suggestions keep working.
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\InputPersonalization'
+      value: 'RestrictImplicitTextCollection'
+      type: REG_DWORD
+      data: '1'
+
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\InputPersonalization'
+      value: 'RestrictImplicitInkCollection'
+      type: REG_DWORD
+      data: '1'
+
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Input\TIPC'
+      value: 'Enabled'
+      type: REG_DWORD
+      data: '0'
+
+  # Online speech recognition: voice typing and voice access send audio to
+  # Microsoft. Side effect: voice typing (Win+H) stops working until it is
+  # turned back on in Settings > Privacy & security > Speech.
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\Speech_OneCore\Settings\OnlineSpeechPrivacy'
+      value: 'HasAccepted'
+      type: REG_DWORD
+      data: '0'
+
   - !status: {status: 'Step 4 of 8: Blocking telemetry programs'}
 
   - !registryValue:

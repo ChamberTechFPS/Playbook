@@ -60,7 +60,7 @@ The full list, phase by phase, is in [How it works](docs/HOW-IT-WORKS.md).
 | **Internet** | Needed to install your browser |
 | **AME Wizard** | Download from [ameliorated.io](https://ameliorated.io) |
 
-25H2 is tested on real hardware and client PCs. 26H2 is supported ahead of its general release. Every change is ordinary registry, service and boot settings with nothing version-specific, but run Verify after your first 26H2 install and tell me if anything fails.
+25H2 and 26H2 are tested on real hardware and client PCs.
 
 ---
 

@@ -280,6 +280,14 @@ $RegistryDefaults = @{
     'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager|SubscribedContent-353696Enabled'  = @{ Action = 'Delete' }
     'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager|RotatingLockScreenOverlayEnabled' = @{ Action = 'Delete' }
     'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager|SubscribedContent-338387Enabled'  = @{ Action = 'Delete' }
+    'HKCU\Software\Microsoft\Windows\CurrentVersion\UserProfileEngagement|ScoobeSystemSettingEnabled'       = @{ Action = 'Delete' }
+    # Absent means on (Windows' default), as with ContentDeliveryManager.
+    'HKCU\Software\Microsoft\Windows\CurrentVersion\Privacy|TailoredExperiencesWithDiagnosticDataEnabled' = @{ Action = 'Delete' }
+    'HKCU\Control Panel\International\User Profile|HttpAcceptLanguageOptOut'                     = @{ Action = 'Delete' }
+    'HKCU\Software\Microsoft\InputPersonalization|RestrictImplicitTextCollection'                = @{ Action = 'Delete' }
+    'HKCU\Software\Microsoft\InputPersonalization|RestrictImplicitInkCollection'                 = @{ Action = 'Delete' }
+    'HKCU\Software\Microsoft\Input\TIPC|Enabled'                                                 = @{ Action = 'Delete' }
+    'HKCU\Software\Microsoft\Speech_OneCore\Settings\OnlineSpeechPrivacy|HasAccepted'            = @{ Action = 'Delete' }
     'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\CompatTelRunner.exe|Debugger'  = @{ Action = 'Delete' }
     'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\AggregatorHost.exe|Debugger'   = @{ Action = 'Delete' }
     'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\DeviceCensus.exe|Debugger'     = @{ Action = 'Delete' }

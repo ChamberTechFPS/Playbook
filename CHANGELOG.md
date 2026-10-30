@@ -16,6 +16,8 @@ It also carries every fix from 1.3.1-1.3.3, including the bundled Visual C++ run
 - *Pause Windows Updates* replaces *Stop automatic Windows Updates*. You can click Resume in Settings any time.
 - New option: stop Windows Update replacing your GPU driver with an older one.
 - More telemetry off, and Outlook and Dev Home stay removed.
+- The remaining Windows privacy switches are off, and so is the "Let's finish setting up your device" screen.
+- Installing from a USB no longer needs internet, and 26H2 is now tested.
 - Laptops must be plugged in to run it.
 
 Minor bump: a new option, a renamed option and several defaults changed.
@@ -27,10 +29,14 @@ Minor bump: a new option, a renamed option and several defaults changed.
 - **Gaming quality of life** (phase 8): Windows no longer turns other audio down during calls (`UserDuckingPreference = 3`), *End task* on the taskbar's right-click menu (`TaskbarEndTask = 1`), and Dynamic Lighting off (`AmbientLightingEnabled = 0`) so it doesn't fight iCUE, Armoury Crate or SignalRGB. From AtlasOS and ReviOS.
 - **Search** (phase 5): indexing pauses during Game Mode and heavy CPU or disk load (`RespectPowerModes = 1`), search highlights off (`IsDynamicSearchBoxEnabled = 0`, downloaded daily), and web results blocked by policy as well (`ConnectedSearchUseWeb = 0`).
 - **More telemetry off** (phase 5): the `SetupPlatformTel` boot logger, the DataCollection policies `DoNotShowFeedbackNotifications`, `LimitDiagnosticLogCollection`, `LimitDumpCollection` and `AllowDeviceNameInTelemetry = 0`, feedback prompts (`NumberOfSIUFInPeriod = 0`), and the .NET SDK and PowerShell 7 telemetry opt-out environment variables. From ReviOS.
+- **The remaining privacy switches** (phase 5), under Settings > Privacy & security: tailored experiences (`TailoredExperiencesWithDiagnosticDataEnabled = 0`), websites reading the language list (`HttpAcceptLanguageOptOut = 1`), inking and typing personalization (`RestrictImplicitTextCollection` and `RestrictImplicitInkCollection = 1`, `TIPC\Enabled = 0`) and online speech recognition (`OnlineSpeechPrivacy\HasAccepted = 0`). Voice typing (Win+H) stops working until online speech recognition is turned back on. On a USB install the first sign-in re-applies them, since Windows' own privacy screen writes several of them when the account is created. From ReviOS and AtlasOS.
+- **No more "Let's finish setting up your device"** (phase 5). `ScoobeSystemSettingEnabled = 0` stops the full-screen page after updates that pushes Microsoft 365, OneDrive and Game Pass. From ReviOS and AtlasOS.
 - **Outlook and Dev Home stay removed** (phase 6). Windows Update's orchestrator reinstalls them; deleting their `UScheduler_Oobe` keys and marking the `UScheduler` jobs `workCompleted = 1` stops that. The two key deletes are not in the verification manifest (it lists them as unparsed). From AtlasOS.
 - **`PluggedIn` requirement.** AME Wizard will not start on a laptop running on battery, so a run cannot die halfway.
 
 ### Changed
+- **A USB (ISO) install no longer needs internet.** `<Internet>` is `Request` instead of `Force`: setup offers a connection but no longer stops without one. The browser and VC++ runtimes are already on the USB, and the steps that go online (winget, the connectivity check) only run on a normal install. Verified with an offline install.
+- **26H2 (build 26300) is verified**, no longer declared ahead of testing.
 - **WSearch, SysMain, TabletInputService and TapiSrv are back at their Windows defaults** (phase 3), written explicitly so an in-place upgrade turns them back on. Neither ReviOS nor AtlasOS disables any of them.
   - WSearch: off made file search in Start and Explorer slow and broke Outlook search. It now pauses during Game Mode instead, and the phase 9 indexer priority demotions finally have a process to apply to.
   - SysMain: no measured gain from turning it off, and it can lengthen load times.
@@ -56,6 +62,8 @@ Minor bump: a new option, a renamed option and several defaults changed.
 - Feature pin: delete `TargetReleaseVersion`, `ProductVersion` and `TargetReleaseVersionInfo` under `HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate`. Restore removes the first two; the third is written by a script, so it is not in the manifest, and it does nothing without `TargetReleaseVersion`.
 - Pause: click *Resume* in Settings > Windows Update, or delete the seven `Pause*` / `FlightSettingsMaxPauseDays` values under `HKLM\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings`.
 - FTH: set `HKLM\SOFTWARE\Microsoft\FTH\Enabled` back to 1. Fixes it already cleared are not reapplied.
+- Privacy switches and the setup page: delete the seven new values (Restore does this), or turn each back on in Settings > Privacy & security.
+- Internet: set `<Internet>` back to `Force` in `playbook.conf`.
 
 ## [1.3.3] - 2026-10-25
 

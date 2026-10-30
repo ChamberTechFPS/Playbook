@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedUtc": "2026-10-22T15:58:53Z",
+  "generatedUtc": "2026-10-30T05:00:17Z",
   "registryValues": [
     {
       "source": "1-power.yml",
@@ -458,6 +458,55 @@
       "source": "5-privacy.yml",
       "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
       "value": "SubscribedContent-338387Enabled",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\UserProfileEngagement",
+      "value": "ScoobeSystemSettingEnabled",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Privacy",
+      "value": "TailoredExperiencesWithDiagnosticDataEnabled",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Control Panel\\International\\User Profile",
+      "value": "HttpAcceptLanguageOptOut",
+      "type": "REG_DWORD",
+      "data": "1"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\InputPersonalization",
+      "value": "RestrictImplicitTextCollection",
+      "type": "REG_DWORD",
+      "data": "1"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\InputPersonalization",
+      "value": "RestrictImplicitInkCollection",
+      "type": "REG_DWORD",
+      "data": "1"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Input\\TIPC",
+      "value": "Enabled",
+      "type": "REG_DWORD",
+      "data": "0"
+    },
+    {
+      "source": "5-privacy.yml",
+      "path": "HKCU\\Software\\Microsoft\\Speech_OneCore\\Settings\\OnlineSpeechPrivacy",
+      "value": "HasAccepted",
       "type": "REG_DWORD",
       "data": "0"
     },
