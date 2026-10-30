@@ -12,7 +12,7 @@ The details behind the one-click run: what each phase changes, what I deliberate
 | 2  | BCD Tweaks | TSC sync policy, boot animation off, 15-second boot menu (only dual-boot PCs ever see it) |
 | 3  | Services   | Disables telemetry and unused services and 9 telemetry scheduled tasks. Search, SysMain and typing services stay on |
 | 4  | Registry   | MMCSS priority, Game Mode enforced on, windowed-game flip model, Fault Tolerant Heap off, mouse accel off, visual effects |
-| 5  | Privacy    | Telemetry policies and loggers off, telemetry programs blocked, no web results or highlights in search, indexing pauses during games, no P2P update uploads, no background Store apps |
+| 5  | Privacy    | Telemetry policies and loggers off, telemetry programs blocked, no web results or highlights in search, indexing pauses during games, no P2P update uploads, no background Store apps, typing, speech and tailored-experience data off, no "finish setting up" page |
 | 6  | Debloat    | Removes balanced inbox bloat (installed + provisioned AppX) and stops Outlook and Dev Home reinstalling |
 | 7  | Security   | Pins your current Windows 11 release. Optional: VBS/HVCI off, Smart App Control off, pause updates, no drivers from Windows Update, BitLocker off |
 | 8  | UI Config  | Dark mode, transparency off, clean taskbar, Explorer to This PC, classic context menu, file extensions, no audio ducking, taskbar *End task*, Dynamic Lighting off |
