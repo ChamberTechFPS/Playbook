@@ -24,7 +24,6 @@ Before you start:
 
 - Windows 11 24H2, 25H2 or 26H2, x64 only. I recommend a fresh install.
 - Install all Windows updates first.
-- Uninstall any third-party antivirus. ChamberTech leaves Microsoft Defender on.
 - You need an internet connection.
 
 ISO injection is supported too. Here's the guide: [ISO injection guide](https://youtu.be/uGvz4M7Lj4Q)
