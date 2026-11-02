@@ -22,7 +22,7 @@ Watch the install walkthrough: [ChamberTech Playbook install tutorial](https://y
 
 Before you start:
 
-- Use a fresh Windows 11 install (24H2, 25H2 or 26H2), x64 only.
+- Windows 11 24H2, 25H2 or 26H2, x64 only. I recommend a fresh install.
 - Install all Windows updates first.
 - Uninstall any third-party antivirus. ChamberTech leaves Microsoft Defender on.
 - You need an internet connection.
