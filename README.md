@@ -1,8 +1,8 @@
-# Chamber Playbook
+# ChamberTech Playbook
 
-Chamber is an [AME Wizard](https://ameliorated.io) playbook I built to set up a fresh Windows 11 install for competitive gaming. You load it, pick your options, and it does the rest in one pass.
+ChamberTech Playbook is an [AME Wizard](https://ameliorated.io) playbook I built to set up a fresh Windows 11 install for competitive gaming. You load it, pick your options, and it does the rest in one pass.
 
-Watch the install walkthrough: [Chamber Playbook Install Tutorial](https://youtu.be/jzM9MHyzCiI)
+Watch the install walkthrough: [ChamberTech Playbook install tutorial](https://youtu.be/jzM9MHyzCiI)
 
 ## What it does
 
@@ -24,10 +24,10 @@ Before you start:
 
 - Use a fresh Windows 11 install (24H2, 25H2 or 26H2), x64 only.
 - Install all Windows updates first.
-- Uninstall any third-party antivirus. Chamber leaves Microsoft Defender on.
+- Uninstall any third-party antivirus. ChamberTech leaves Microsoft Defender on.
 - You need an internet connection.
 
-ISO injection is in there too, but it's experimental. Test it on a spare machine or a VM first.
+ISO injection is in there too, but it's experimental.
 
 ## Check it worked
 
@@ -35,11 +35,11 @@ Run `C:\ChamberTech\PostInstall\START-HERE.bat` as administrator. It checks the 
 
 ## Read it yourself
 
-Everything in the playbook is plain-text YAML and PowerShell. An `.apbx` is a renamed 7z archive (password `malte`, which is an AME convention, not a secret), so you can open it and read every file. Releases are built by GitHub Actions straight from this repo, and each one ships with `SHA256SUMS.txt`.
+Everything in ChamberTech Playbook is plain-text YAML and PowerShell. An `.apbx` is a renamed 7z archive (password `malte`, which is an AME convention, not a secret), so you can open it and read every file. Releases are built by GitHub Actions straight from this repo, and each one ships with `SHA256SUMS.txt`.
 
 ## Use at your own risk
 
-Chamber makes big changes to Windows. Run it on a fresh install, not a machine you depend on.
+ChamberTech Playbook makes big changes to Windows. Use it at your own risk.
 
 ## Help and links
 
