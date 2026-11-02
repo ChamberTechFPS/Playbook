@@ -27,7 +27,7 @@ Before you start:
 - Uninstall any third-party antivirus. ChamberTech leaves Microsoft Defender on.
 - You need an internet connection.
 
-ISO injection is in there too, but it's experimental.
+ISO injection is in there too, but it's experimental. Here's the guide: [ISO injection guide](https://youtu.be/uGvz4M7Lj4Q)
 
 ## Check it worked
 
