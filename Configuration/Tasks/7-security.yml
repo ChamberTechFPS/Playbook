@@ -1,5 +1,9 @@
 title: Security
 actions:
+  # Optional, off by default. Valorant (Vanguard) can refuse to start with
+  # Memory Integrity off (VAN: RESTRICTION), and FACEIT can refuse to run
+  # without VBS. playbook.conf says so on the option itself. Do not describe
+  # this as a free performance win.
   - !status: {status: 'Step 6 of 8: Turning off VBS and Memory Integrity', option: 'disable-vbs'}
 
   - !registryValue:

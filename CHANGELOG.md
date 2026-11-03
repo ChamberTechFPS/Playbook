@@ -3,6 +3,17 @@
 All notable changes to Chamber Playbook are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com); versions follow [SemVer](https://semver.org).
 
+## [Unreleased]
+
+### Fixed
+- **Turning VBS and Memory Integrity off no longer reads as a free performance win.** The option stays, and it still ships unticked. Its label and description now say Valorant (Riot Vanguard) may refuse to start with Memory Integrity off (VAN: RESTRICTION) and that FACEIT may refuse to run without VBS. `Verify-Chamber.ps1` reports VBS off as a warning with that anti-cheat impact. It used to say "Disabled - good for performance". WSL2, Windows Sandbox and Docker Desktop are still listed as broken by the option.
+- **Verify checks TPM 2.0 and IOMMU, not only Secure Boot.** `playbook.conf` already said Secure Boot and TPM 2.0 are checked by `Verify-Chamber.ps1`. TPM was not. The script now reads TPM 2.0 from `Win32_Tpm` and IOMMU (Intel VT-d / AMD-Vi) the way Windows reports it: Device Guard "DMA protection". Both are read-only, same as Secure Boot. FACEIT requires all three plus VBS; Vanguard requires Secure Boot, TPM 2.0, and can block Valorant when Memory Integrity is off.
+- **`DisablePagingExecutive` is verifiable and undoable.** Phase 4 sets it with `Set-ItemProperty` inside a `!cmd`, and only when the PC has 8 GB of RAM or more, so it never became a `!registryValue`. The manifest, the pre-install snapshot and `Restore-Chamber.ps1` all skipped it. The manifest generator now records that write, including the RAM guard (`whenRamAtLeastGb`), so a machine under 8 GB is not failed for leaving it unset. Restore sets it back to the Windows default of 0 when there is no snapshot. `Complete-ChamberSetup.ps1` honours the same guard when it re-applies HKLM values. `validate_playbook_conf.py` fails the build when a `!cmd` writes the registry and Restore has no undo for it, or when the generator cannot parse the write.
+
+### Rollback
+- VBS and Memory Integrity: leave the option unticked, or set `EnableVirtualizationBasedSecurity` and `RequirePlatformSecurityFeatures` back to 1 and Memory Integrity `Enabled` back to 1, then reboot. `Restore-Chamber.ps1` does this.
+- `DisablePagingExecutive`: set it to 0, or delete the value, then reboot. `Restore-Chamber.ps1` sets 0. A pre-install snapshot restores whatever was there before, including an absent value.
+
 ## [1.3.3] - 2026-10-25
 
 ### Fixed

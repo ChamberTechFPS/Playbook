@@ -47,6 +47,10 @@ actions:
 
   # Only disable paging of kernel executive code on systems with 8 GB+ RAM.
   # On low-RAM systems this can exhaust non-paged pool and cause BSODs.
+  # tools/generate_verification_manifest.py records this Set-ItemProperty,
+  # including the `$ram -ge 8GB` guard, so Verify, the pre-install snapshot
+  # and Restore see it. Keep -Path, -Name, -Value and -Type; the validator
+  # rejects a registry write it cannot parse or that Restore cannot undo.
   - !cmd:
       command: 'powershell -NoProfile -Command "$ram=(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory;if($ram -ge 8GB){Set-ItemProperty -Path ''HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management'' -Name DisablePagingExecutive -Value 1 -Type DWord;Write-Host ''DisablePagingExecutive enabled (sufficient RAM detected)''}else{Write-Host ''Skipping DisablePagingExecutive: less than 8 GB RAM - not safe to enable''}"'
       wait: true

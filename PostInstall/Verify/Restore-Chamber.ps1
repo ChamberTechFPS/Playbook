@@ -209,6 +209,9 @@ $RegistryDefaults = @{
     'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games|Scheduling Category' = @{ Action = 'Set'; Data = 'Medium'; Type = 'String' }
     'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games|SFIO Priority' = @{ Action = 'Set'; Data = 'Normal'; Type = 'String' }
     'HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl|Win32PrioritySeparation' = @{ Action = 'Set'; Data = 2; Type = 'DWord' }
+    # 0 is the documented Windows default (kernel code may be paged). A snapshot
+    # still wins when the value was absent before Chamber. Requires a reboot.
+    'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management|DisablePagingExecutive' = @{ Action = 'Set'; Data = 0; Type = 'DWord'; Note = 'Windows default is 0. Requires a reboot.' }
     'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management|LargeSystemCache' = @{ Action = 'Set'; Data = 0; Type = 'DWord'; Note = 'already the Windows default' }
     'HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers|HwSchMode' = @{ Action = 'Skip'; Note = 'HAGS - 2 is the current Windows default and disabling it breaks DLSS Frame Generation. Use -IncludeHags to force.'; HagsGated = $true; Data = 1; Type = 'DWord' }
     'HKCU\Control Panel\Mouse|MouseSpeed'      = @{ Action = 'Set'; Data = '1';  Type = 'String' }
