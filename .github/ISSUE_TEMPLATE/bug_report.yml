@@ -47,7 +47,7 @@ body:
         - label: Turn off Game Bar overlay and recording
         - label: OLED burn-in protection
         - label: Turn off BitLocker / device encryption
-        - label: Turn off VBS and Memory Integrity
+        - label: Turn off VBS and Memory Integrity (Valorant and FACEIT may refuse to run)
         - label: Stop automatic Windows Updates
         - label: Turn off Smart App Control
   - type: textarea

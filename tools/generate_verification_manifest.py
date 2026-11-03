@@ -12,6 +12,11 @@ drift out of sync with the playbook.
 
 Deliberately line-based rather than a full YAML parser: AME task files are
 regular, and this avoids a PyYAML dependency (bang-tags break stock loaders).
+
+A !cmd that sets a registry value (Set-ItemProperty, reg add, fsutil
+disablelastaccess) is recorded too. DisablePagingExecutive is applied that
+way, behind an 8 GB RAM guard, and used to be invisible to Verify, the
+pre-install snapshot and Restore.
 """
 
 import json
@@ -32,6 +37,202 @@ BCD_TIMEOUT_RE = re.compile(r"bcdedit\s+/timeout\s+(\d+)")
 HOSTS_ENTRY_RE = re.compile(r"'(0\.0\.0\.0\s+\S+)'")
 APPX_NAMES_RE = re.compile(r"-AppxNames\s+@\(([^)]*)\)")
 FSUTIL_LASTACCESS_RE = re.compile(r"fsutil\s+behavior\s+set\s+disablelastaccess\s+(\d)", re.IGNORECASE)
+# A !cmd that writes the registry. `reg query` is a read and must not match.
+REGISTRY_WRITE_RE = re.compile(
+    r"(?i)(?:\b(?:Set|New)-ItemProperty\b|\breg(?:\.exe)?\s+add\b|fsutil\s+behavior\s+set\s+disablelastaccess\b)"
+)
+PS_REG_TYPES = {
+    "dword": "REG_DWORD",
+    "qword": "REG_QWORD",
+    "string": "REG_SZ",
+    "expandstring": "REG_EXPAND_SZ",
+    "binary": "REG_BINARY",
+    "multistring": "REG_MULTI_SZ",
+}
+RAM_GE_RE = re.compile(r"(?i)\$ram\s*-ge\s*(\d+)\s*GB\b")
+
+
+def normalize_reg_path(path: str) -> str:
+    """PowerShell provider path or reg.exe key -> the HKLM\\... form the manifest uses."""
+    path = path.strip().strip('"').strip("'")
+    for src, dst in (
+        ("HKEY_LOCAL_MACHINE\\", "HKLM\\"),
+        ("HKEY_CURRENT_USER\\", "HKCU\\"),
+        ("HKEY_CLASSES_ROOT\\", "HKCR\\"),
+        ("HKLM:\\", "HKLM\\"),
+        ("HKCU:\\", "HKCU\\"),
+        ("HKCR:\\", "HKCR\\"),
+    ):
+        if path.upper().startswith(src.upper()):
+            path = dst + path[len(src):]
+            break
+    m = re.match(r"(?i)^(HKLM|HKCU|HKCR|HKU)\\(.*)$", path)
+    if not m:
+        return ""
+    return m.group(1).upper() + "\\" + m.group(2)
+
+
+def _statement_end(text: str) -> int:
+    """Index of the next semicolon that is not inside quotes, or len(text)."""
+    quote = None
+    for i, ch in enumerate(text):
+        if quote:
+            if ch == quote:
+                quote = None
+            continue
+        if ch in "'\"":
+            quote = ch
+        elif ch == ";":
+            return i
+    return len(text)
+
+
+def _invocations(command: str, pattern: str):
+    for match in re.finditer(pattern, command):
+        rest = command[match.end():]
+        yield command[match.start(): match.end() + _statement_end(rest)]
+
+
+def _ps_param(chunk: str, name: str):
+    match = re.search(
+        rf"(?i)-{name}\s+(?:'([^']*)'|\"([^\"]*)\"|(\S+))",
+        chunk,
+    )
+    if not match:
+        return None
+    token = next(group for group in match.groups() if group is not None)
+    return token.strip().rstrip(";}")
+
+
+def _flag_value(chunk: str, flag: str):
+    match = re.search(
+        rf"(?i)(?:^|\s)/{flag}\s+(?:\"([^\"]*)\"|'([^']*)'|(\S+))",
+        chunk,
+    )
+    if not match:
+        return None
+    return next(group for group in match.groups() if group is not None)
+
+
+def command_writes_registry(command: str) -> bool:
+    return REGISTRY_WRITE_RE.search(command or "") is not None
+
+
+def registry_writes_from_command(command: str):
+    """Registry values a !cmd command string sets.
+
+    Returned dicts use manifest fields (path, value, type, data). `emit` is
+    false for a write whose effect is the key existing (reg add /ve): Restore
+    deletes that key, and an empty default value is not a useful manifest row.
+    `error` is set when the write is visible but not parseable — the generator
+    and the validator both fail closed on that, so a tweak cannot silently
+    skip verification and undo.
+
+    `$ram -ge NGB` around a Set-ItemProperty is recorded as whenRamAtLeastGb.
+    DisablePagingExecutive uses that guard: below 8 GB the value is not set,
+    and Verify must not call that a failure.
+    """
+    command = command or ""
+    writes = []
+
+    for chunk in _invocations(command, r"(?i)\b(?:Set|New)-ItemProperty\b"):
+        path, name, value, typ = (
+            _ps_param(chunk, "Path"),
+            _ps_param(chunk, "Name"),
+            _ps_param(chunk, "Value"),
+            _ps_param(chunk, "Type"),
+        )
+        ame = normalize_reg_path(path) if path else ""
+        reg_type = PS_REG_TYPES.get(typ.lower()) if typ else None
+        if not (ame and name and value is not None and reg_type):
+            writes.append({
+                "error": (
+                    "Set-ItemProperty must use -Path, -Name, -Value and -Type "
+                    "with a hive path (HKLM:\\... or HKCU:\\...) so it can be "
+                    "verified and undone"
+                ),
+                "emit": False,
+            })
+            continue
+        entry = {
+            "path": ame,
+            "value": name,
+            "type": reg_type,
+            "data": value,
+            "emit": True,
+        }
+        # Only a write that sits inside the RAM test gets the guard. A later
+        # unconditional Set-ItemProperty in the same command must not inherit it.
+        ram = RAM_GE_RE.search(command)
+        if ram and command.find(chunk) >= ram.end():
+            entry["whenRamAtLeastGb"] = int(ram.group(1))
+        writes.append(entry)
+
+    for chunk in _invocations(command, r"(?i)\breg(?:\.exe)?\s+add\b"):
+        key_match = re.search(
+            r"(?i)\breg(?:\.exe)?\s+add\s+(?:\"([^\"]+)\"|'([^']+)'|(\S+))",
+            chunk,
+        )
+        key = next((g for g in key_match.groups() if g is not None), "") if key_match else ""
+        ame = normalize_reg_path(key) if key else ""
+        if not ame:
+            writes.append({
+                "error": "reg add is missing a hive key (HKLM\\... or HKCU\\...)",
+                "emit": False,
+            })
+            continue
+        if re.search(r"(?i)(?:^|\s)/ve(?:\s|$)", chunk):
+            # Default value, usually empty. The classic context-menu tweak is
+            # this shape: the key's existence is the change, and Restore
+            # deletes the key. Emitting value "" would make the registry
+            # restore loop report UNKNOWN.
+            writes.append({
+                "path": ame,
+                "value": "",
+                "type": "REG_SZ",
+                "data": "",
+                "emit": False,
+            })
+            continue
+        vname = _flag_value(chunk, "v")
+        if not vname:
+            writes.append({
+                "error": f"reg add {ame} has no /v value name and no /ve",
+                "emit": False,
+            })
+            continue
+        reg_type = (_flag_value(chunk, "t") or "REG_SZ").upper()
+        if not reg_type.startswith("REG_"):
+            writes.append({
+                "error": f"reg add type {reg_type!r} is not a REG_* type",
+                "emit": False,
+            })
+            continue
+        data = _flag_value(chunk, "d")
+        writes.append({
+            "path": ame,
+            "value": vname,
+            "type": reg_type,
+            "data": "" if data is None else data,
+            "emit": True,
+        })
+
+    fsutil = FSUTIL_LASTACCESS_RE.search(command)
+    if fsutil:
+        writes.append({
+            "path": r"HKLM\SYSTEM\CurrentControlSet\Control\FileSystem",
+            "value": "NtfsDisableLastAccessUpdate",
+            "type": "REG_DWORD",
+            "data": fsutil.group(1),
+            "emit": True,
+        })
+
+    if command_writes_registry(command) and not writes:
+        writes.append({
+            "error": "a !cmd writes the registry but the write could not be parsed",
+            "emit": False,
+        })
+    return writes
 
 
 def unquote(v: str) -> str:
@@ -116,6 +317,8 @@ def main() -> int:
         "unparsedActions": [],
     }
 
+    parse_errors = []
+
     for task_file in sorted(TASKS_DIR.glob("*.yml")):
         text = task_file.read_text(encoding="utf-8", errors="replace")
         source = task_file.name
@@ -148,28 +351,36 @@ def main() -> int:
                 if option:
                     entry["option"] = option
                 manifest["services"].append(entry)
-            elif name == "cmd" and (mf := FSUTIL_LASTACCESS_RE.search(p.get("command", ""))):
-                # fsutil behavior set disablelastaccess N writes this value
-                manifest["registryValues"].append(
-                    {
+            elif name == "cmd":
+                cmd = p.get("command", "")
+                for write in registry_writes_from_command(cmd):
+                    if write.get("error"):
+                        parse_errors.append(f"{source}: {write['error']}")
+                        continue
+                    if not write.get("emit", True):
+                        continue
+                    entry = {
                         "source": source,
-                        "path": r"HKLM\SYSTEM\CurrentControlSet\Control\FileSystem",
-                        "value": "NtfsDisableLastAccessUpdate",
-                        "type": "REG_DWORD",
-                        "data": mf.group(1),
+                        "path": write["path"],
+                        "value": write["value"],
+                        "type": write["type"],
+                        "data": write.get("data", ""),
                     }
-                )
-            elif name == "cmd" and "bcdedit" in p.get("command", ""):
-                cmd = p["command"]
-                mb = BCD_RE.search(cmd)
-                mt = BCD_TIMEOUT_RE.search(cmd)
-                tolerant = "||" in cmd  # hardware-dependent, WARN not FAIL
-                if mb:
-                    manifest["bcd"]["flags"].append(
-                        {"source": source, "flag": mb.group(1), "expected": mb.group(2), "tolerant": tolerant}
-                    )
-                elif mt:
-                    manifest["bcd"]["timeout"] = int(mt.group(1))
+                    if "whenRamAtLeastGb" in write:
+                        entry["whenRamAtLeastGb"] = write["whenRamAtLeastGb"]
+                    if option:
+                        entry["option"] = option
+                    manifest["registryValues"].append(entry)
+                if "bcdedit" in cmd:
+                    mb = BCD_RE.search(cmd)
+                    mt = BCD_TIMEOUT_RE.search(cmd)
+                    tolerant = "||" in cmd  # hardware-dependent, WARN not FAIL
+                    if mb:
+                        manifest["bcd"]["flags"].append(
+                            {"source": source, "flag": mb.group(1), "expected": mb.group(2), "tolerant": tolerant}
+                        )
+                    elif mt:
+                        manifest["bcd"]["timeout"] = int(mt.group(1))
             elif name == "scheduledTask" and p.get("operation", "").lower() in ("disable", "enable") and "path" in p:
                 entry = {"source": source, "path": p["path"], "state": p["operation"].lower()}
                 if option:
@@ -206,6 +417,10 @@ def main() -> int:
     )
     if manifest["unparsedActions"]:
         print("  NOTE: unparsed actions are listed in the manifest for manual verification coverage.")
+    if parse_errors:
+        for err in parse_errors:
+            print(f"ERROR: {err}", file=sys.stderr)
+        return 1
     return 0
 
 

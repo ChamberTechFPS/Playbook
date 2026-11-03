@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedUtc": "2026-10-15T01:09:46Z",
+  "generatedUtc": "2026-11-03T17:44:04Z",
   "registryValues": [
     {
       "source": "1-power.yml",
@@ -43,6 +43,14 @@
       "value": "Win32PrioritySeparation",
       "type": "REG_DWORD",
       "data": "38"
+    },
+    {
+      "source": "4-registry.yml",
+      "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management",
+      "value": "DisablePagingExecutive",
+      "type": "REG_DWORD",
+      "data": "1",
+      "whenRamAtLeastGb": 8
     },
     {
       "source": "4-registry.yml",

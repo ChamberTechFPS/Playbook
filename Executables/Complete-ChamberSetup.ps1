@@ -178,10 +178,43 @@ function Remove-ManifestValue {
     }
 }
 
+# DisablePagingExecutive is in the manifest with whenRamAtLeastGb. Re-applying
+# it on a PC under that minimum can exhaust non-paged pool. Skip the write
+# rather than guessing when RAM cannot be read.
+$script:ChamberRamBytes = $null
+$script:ChamberRamKnown = $false
+function Get-ChamberRamBytes {
+    if ($script:ChamberRamKnown) { return $script:ChamberRamBytes }
+    $script:ChamberRamKnown = $true
+    try {
+        $script:ChamberRamBytes = [int64](Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Stop).TotalPhysicalMemory
+    } catch {
+        $script:ChamberRamBytes = $null
+    }
+    return $script:ChamberRamBytes
+}
+
+function Test-RamAllows {
+    param($Entry)
+    if (-not $Entry.PSObject.Properties['whenRamAtLeastGb']) { return $true }
+    $label = "$($Entry.path)\$($Entry.value)"
+    $minGb = [int64]$Entry.whenRamAtLeastGb
+    $ram = Get-ChamberRamBytes
+    if ($null -eq $ram) {
+        Write-Log "SKIP   $label (could not read RAM; not applying a memory tweak blindly)"
+        return $false
+    }
+    if ($ram -lt ($minGb * 1GB)) {
+        Write-Log "SKIP   $label (under $minGb GB RAM)"
+        return $false
+    }
+    return $true
+}
+
 function Invoke-RegistryPass {
     param($Manifest, [string[]]$Selected, [string]$HivePrefix)
     foreach ($e in @($Manifest.registryValues)) {
-        if ($e.path -like "$HivePrefix\*" -and (Test-Applies $e $Selected)) { Set-ManifestValue $e }
+        if ($e.path -like "$HivePrefix\*" -and (Test-Applies $e $Selected) -and (Test-RamAllows $e)) { Set-ManifestValue $e }
     }
     foreach ($e in @($Manifest.registryDeletes)) {
         if ($e.path -like "$HivePrefix\*") { Remove-ManifestValue $e }

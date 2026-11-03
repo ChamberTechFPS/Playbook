@@ -31,11 +31,15 @@ machine somebody has already booted.
   - the deployment receipt's version literal matches <Version>
   - the welcome page <ProgressText> promises ships, is self-contained, and is
     scheduled machine-wide by Install-PostInstallCompanion.ps1
+  - a !cmd that writes the registry can be parsed, lands in the verification
+    manifest when it sets a named value, and has an undo in Restore-Chamber.ps1
 
 Exits non-zero and prints every problem found.
 """
 
 import argparse
+import importlib.util
+import json
 import re
 import sys
 import xml.etree.ElementTree as ET
@@ -720,6 +724,113 @@ def check_feature_pages(root, errors, supports_iso):
             )
 
 
+def _load_generator():
+    path = REPO / "tools" / "generate_verification_manifest.py"
+    spec = importlib.util.spec_from_file_location("generate_verification_manifest", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _ps_reg_path(path):
+    for src, dst in (("HKLM\\", "HKLM:\\"), ("HKCU\\", "HKCU:\\"), ("HKCR\\", "HKCR:\\")):
+        if path.startswith(src):
+            return dst + path[len(src):]
+    return path
+
+
+def restore_covers(restore, path, value):
+    """True when Restore-Chamber.ps1 can undo this registry write.
+
+    A `$RegistryDefaults` key (`path|value`) is the normal undo. A quoted copy
+    of the key, or of a parent key, also counts: the classic context menu is
+    undone by deleting its CLSID key in the companion scope, not by writing a
+    default value back.
+    """
+    if value and f"{path}|{value}" in restore:
+        return True
+    parts = path.split("\\")
+    # Stop above hive + one component. `HKCU\\Software` is a prefix of unrelated
+    # defaults and would pass every per-user write.
+    for length in range(len(parts), 2, -1):
+        ancestor = "\\".join(parts[:length])
+        for variant in (ancestor, _ps_reg_path(ancestor)):
+            if re.search(r"['\"]" + re.escape(variant) + r"['\"]", restore):
+                return True
+    return False
+
+
+def check_command_registry_undo(errors):
+    """Command-applied registry tweaks have to be verifiable and undoable.
+
+    DisablePagingExecutive is the case this exists for. Phase 4 sets it with
+    Set-ItemProperty inside a !cmd, so it never became a !registryValue. The
+    manifest generator, the pre-install snapshot and Restore-Chamber.ps1 all
+    skipped it. A write the generator cannot parse fails here too: otherwise
+    it would vanish the same way.
+    """
+    generator = _load_generator()
+    restore_path = REPO / "PostInstall" / "Verify" / "Restore-Chamber.ps1"
+    manifest_path = REPO / "PostInstall" / "Verify" / "verification-manifest.json"
+    if not restore_path.is_file():
+        errors.append("PostInstall/Verify/Restore-Chamber.ps1 is missing.")
+        return
+    restore = restore_path.read_text(encoding="utf-8")
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        errors.append(f"PostInstall/Verify/verification-manifest.json could not be read: {exc}")
+        return
+    known = {
+        (entry.get("path"), entry.get("value")): entry
+        for entry in manifest.get("registryValues", [])
+    }
+
+    tasks = REPO / "Configuration" / "Tasks"
+    for task in sorted(tasks.glob("*.yml")):
+        rel = task.relative_to(REPO).as_posix()
+        for act in generator.parse_actions(task.read_text(encoding="utf-8")):
+            if act["action"] != "cmd":
+                continue
+            command = act["props"].get("command", "")
+            if not generator.command_writes_registry(command):
+                continue
+            writes = generator.registry_writes_from_command(command)
+            if not writes:
+                errors.append(
+                    f"{rel}: !cmd writes the registry but the write could not be "
+                    "parsed, so it will not be verified or undone."
+                )
+                continue
+            for write in writes:
+                if write.get("error"):
+                    errors.append(f"{rel}: {write['error']}")
+                    continue
+                label = write["path"] + "\\" + (write["value"] or "(default)")
+                if not restore_covers(restore, write["path"], write.get("value", "")):
+                    errors.append(
+                        f"{rel}: !cmd sets {label} but Restore-Chamber.ps1 has no "
+                        "undo for it. Add a $RegistryDefaults entry "
+                        f"'{write['path']}|{write.get('value', '')}', or delete "
+                        "that key from Restore."
+                    )
+                if not write.get("emit", True):
+                    continue
+                got = known.get((write["path"], write["value"]))
+                if got is None:
+                    errors.append(
+                        f"{rel}: !cmd sets {label} but verification-manifest.json "
+                        "has no entry. Run tools/generate_verification_manifest.py."
+                    )
+                    continue
+                if "whenRamAtLeastGb" in write and got.get("whenRamAtLeastGb") != write["whenRamAtLeastGb"]:
+                    errors.append(
+                        f"{rel}: {write['value']} is only set at "
+                        f"{write['whenRamAtLeastGb']} GB of RAM or more, but the "
+                        "manifest does not record that guard. Regenerate it."
+                    )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -737,6 +848,7 @@ def main():
     check_iso_cache(root, errors)
     check_receipt_version(root, errors)
     check_welcome_page(root, errors)
+    check_command_registry_undo(errors)
     if root is not None:
         check_feature_pages(root, errors, text_of(root, "SupportsISO").lower() == "true")
 

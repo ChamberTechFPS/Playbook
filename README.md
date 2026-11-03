@@ -10,7 +10,7 @@ Watch the install walkthrough: [ChamberTech Playbook install tutorial](https://y
 - Applies registry tweaks for latency and input.
 - Blocks telemetry and removes the consumer apps you don't need. The Store, winget and Windows Security stay.
 - Cleans up the UI: dark mode, classic right-click menu, file extensions on.
-- Leaves Secure Boot on, so it works with Vanguard, Easy Anti-Cheat and BattlEye.
+- Leaves Secure Boot, TPM 2.0 and VBS on, so Vanguard, FACEIT, Easy Anti-Cheat and BattlEye can run. Turning VBS and Memory Integrity off is optional, and that choice warns that Valorant and FACEIT may refuse to start.
 - Opens a Driver Setup page after install so you know what to install and in what order.
 
 ## Install

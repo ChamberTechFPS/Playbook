@@ -5,7 +5,7 @@ Chamber - Verify System (standalone, read-only)
 Checks every tweak the playbook applies against actual system state, using
 Verify\verification-manifest.json (generated from the playbook YAML by
 tools/generate_verification_manifest.py), plus hardware checks the playbook
-can't control (Secure Boot, VBS, HAGS, MSI mode), plus the Chamber deployment
+can't control (Secure Boot, TPM 2.0, IOMMU, VBS, HAGS, MSI mode), plus the Chamber deployment
 receipt at C:\ChamberTech\deployment-receipt.json when one exists - that is what
 separates "this option was never selected" from "it was selected and failed".
 
@@ -78,11 +78,33 @@ function ConvertTo-PsRegPath {
                      -replace '^HKCR\\', 'Registry::HKEY_CLASSES_ROOT\' -replace '^HKU\\', 'Registry::HKEY_USERS\')
 }
 
+# One CIM query for every whenRamAtLeastGb row. $null means the read failed.
+$script:ChamberRamBytes = $null
+$script:ChamberRamKnown = $false
+function Get-ChamberRamBytes {
+    if ($script:ChamberRamKnown) { return $script:ChamberRamBytes }
+    $script:ChamberRamKnown = $true
+    try {
+        $script:ChamberRamBytes = [int64](Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Stop).TotalPhysicalMemory
+    } catch {
+        $script:ChamberRamBytes = $null
+    }
+    return $script:ChamberRamBytes
+}
+
 # --- Registry ---------------------------------------------------------------
 if ($manifest) {
-    $regFail = 0; $regPass = 0; $optSkipped = 0
+    $regFail = 0; $regPass = 0; $optSkipped = 0; $ramSkipped = 0
     foreach ($entry in $manifest.registryValues) {
         $isOptional = [bool]($entry.PSObject.Properties.Name -contains 'option')
+        # 'apply', 'skip' (RAM below the guard - leaving the value unset is correct),
+        # 'unknown' (could not read RAM - do not fail a memory tweak blindly).
+        $ramGate = 'apply'
+        if ($entry.PSObject.Properties.Name -contains 'whenRamAtLeastGb') {
+            $ramBytes = Get-ChamberRamBytes
+            if ($null -eq $ramBytes) { $ramGate = 'unknown' }
+            elseif ($ramBytes -lt ([int64]$entry.whenRamAtLeastGb * 1GB)) { $ramGate = 'skip' }
+        }
         $psPath = ConvertTo-PsRegPath $entry.path
         $actual = '<not set>'
         $match = $false
@@ -111,6 +133,12 @@ if ($manifest) {
         if ($match) {
             $regPass++
             if ($Detailed) { Add-Check 'PASS' 'Registry' $label "= $($entry.data)" }
+        } elseif ($ramGate -eq 'skip') {
+            $ramSkipped++
+            if ($Detailed) { Add-Check 'INFO' 'Registry' $label "not applied: under $($entry.whenRamAtLeastGb) GB RAM (actual: $actual)" }
+        } elseif ($ramGate -eq 'unknown') {
+            $ramSkipped++
+            Add-Check 'WARN' 'Registry' $label "expected $($entry.data), but RAM could not be read to apply the $($entry.whenRamAtLeastGb) GB guard (actual: $actual)"
         } elseif ($isOptional) {
             $optSkipped++
             if ($Detailed) { Add-Check 'INFO' 'Registry' $label "optional [$($entry.option)] not applied (actual: $actual)" }
@@ -119,8 +147,9 @@ if ($manifest) {
             Add-Check 'FAIL' 'Registry' $label "expected $($entry.data) [$($entry.type)], actual: $actual (from $($entry.source))"
         }
     }
-    Add-Check ($(if ($regFail -eq 0) { 'PASS' } else { 'FAIL' })) 'Registry' 'Registry tweaks' `
-        "$regPass/$(@($manifest.registryValues).Count) applied, $regFail failed, $optSkipped optional not applied"
+    $regSummary = "$regPass/$(@($manifest.registryValues).Count) applied, $regFail failed, $optSkipped optional not applied"
+    if ($ramSkipped -gt 0) { $regSummary += ", $ramSkipped not applied (RAM guard)" }
+    Add-Check ($(if ($regFail -eq 0) { 'PASS' } else { 'FAIL' })) 'Registry' 'Registry tweaks' $regSummary
 
     # --- Retired values -----------------------------------------------------
     # Tweaks an earlier Chamber set and this version deletes. Still present means
@@ -329,19 +358,69 @@ if ($receipt) {
     }
 }
 # --- Hardware checks ---------------------------------------------------------
+# Read-only. VBS off used to be reported as "good for performance". It is not:
+# Vanguard can block Valorant when Memory Integrity is off (VAN: RESTRICTION),
+# and FACEIT requires VBS together with TPM 2.0, Secure Boot and an IOMMU.
+$deviceGuard = $null
 try {
-    $vbs = Get-CimInstance -Namespace 'root\Microsoft\Windows\DeviceGuard' -ClassName 'Win32_DeviceGuard' -ErrorAction Stop
-    switch ($vbs.VirtualizationBasedSecurityStatus) {
-        0 { Add-Check 'DISABLED' 'Hardware' 'VBS' 'Disabled - good for performance' }
-        1 { Add-Check 'WARN' 'Hardware' 'VBS' 'Enabled but not running - reboot may activate it' }
-        default { Add-Check 'INFO' 'Hardware' 'VBS' 'Running - expected unless "Disable VBS/HVCI" was selected' }
+    $deviceGuard = Get-CimInstance -Namespace 'root\Microsoft\Windows\DeviceGuard' -ClassName 'Win32_DeviceGuard' -ErrorAction Stop
+    $vbsStatus = [int]$deviceGuard.VirtualizationBasedSecurityStatus
+    # SecurityServicesRunning value 2 is Hypervisor-enforced Code Integrity
+    # (Memory Integrity). AvailableSecurityProperties value 3 is DMA protection,
+    # which Windows reports only when the firmware IOMMU (VT-d or AMD-Vi) is on.
+    $memoryIntegrity = @($deviceGuard.SecurityServicesRunning) -contains 2
+    $iommu = @($deviceGuard.AvailableSecurityProperties) -contains 3
+} catch {
+    Add-Check 'WARN' 'Hardware' 'VBS' 'Could not query Device Guard'
+    Add-Check 'WARN' 'Hardware' 'IOMMU' 'Could not query Device Guard for VT-d/AMD-Vi'
+    $deviceGuard = $null
+}
+if ($deviceGuard) {
+    switch ($vbsStatus) {
+        0 {
+            Add-Check 'WARN' 'Hardware' 'VBS' 'Off. Valorant (Vanguard) may refuse to start with Memory Integrity off (VAN: RESTRICTION). FACEIT may refuse to run without VBS.'
+        }
+        1 {
+            Add-Check 'WARN' 'Hardware' 'VBS' 'Enabled but not running - reboot may activate it. Valorant and FACEIT can require VBS.'
+        }
+        default {
+            if ($memoryIntegrity) {
+                Add-Check 'INFO' 'Hardware' 'VBS' 'Running, with Memory Integrity. Leave both on for Valorant (Vanguard) and FACEIT.'
+            } else {
+                Add-Check 'WARN' 'Hardware' 'VBS' 'VBS is running but Memory Integrity (HVCI) is off. Vanguard may refuse to start Valorant (VAN: RESTRICTION).'
+            }
+        }
     }
-} catch { Add-Check 'WARN' 'Hardware' 'VBS' 'Could not query DeviceGuard' }
+    if ($iommu) {
+        Add-Check 'PASS' 'Hardware' 'IOMMU' 'VT-d/AMD-Vi available (Windows reports DMA protection). FACEIT requires this.'
+    } else {
+        Add-Check 'WARN' 'Hardware' 'IOMMU' 'Windows does not report an IOMMU (VT-d/AMD-Vi). FACEIT will not run. Enable VT-d or AMD-Vi in firmware.'
+    }
+}
 
 try {
     if (Confirm-SecureBootUEFI) { Add-Check 'PASS' 'Hardware' 'Secure Boot' 'Enabled - Vanguard/Valorant compatible' }
     else { Add-Check 'WARN' 'Hardware' 'Secure Boot' 'Disabled - Riot Vanguard (Valorant) will NOT work' }
 } catch { Add-Check 'INFO' 'Hardware' 'Secure Boot' 'Could not determine (non-UEFI system?)' }
+
+try {
+    $tpm = Get-CimInstance -Namespace 'root\cimv2\Security\MicrosoftTpm' -ClassName 'Win32_Tpm' -ErrorAction Stop
+    $spec = [string]$tpm.SpecVersion
+    # SpecVersion looks like "2.0, 0, 1.16". Do not treat "1.2" or "12.0" as 2.0.
+    $is20 = $spec -match '(^|[,\s])2\.0([,\s]|$)'
+    $enabled = [bool]$tpm.IsEnabled_InitialValue -and [bool]$tpm.IsActivated_InitialValue
+    if ($is20 -and $enabled) {
+        Add-Check 'PASS' 'Hardware' 'TPM 2.0' "Present and enabled (spec $spec). Vanguard and FACEIT require this."
+    } elseif ($is20) {
+        Add-Check 'WARN' 'Hardware' 'TPM 2.0' "TPM 2.0 is present but not enabled (spec $spec). Turn it on in firmware. Vanguard and FACEIT require it."
+    } elseif ($spec) {
+        Add-Check 'WARN' 'Hardware' 'TPM 2.0' "Not TPM 2.0 (spec $spec). Valorant (Vanguard) and FACEIT will not run."
+    } else {
+        Add-Check 'WARN' 'Hardware' 'TPM 2.0' 'No TPM spec reported. Valorant (Vanguard) and FACEIT require TPM 2.0.'
+    }
+} catch {
+    Add-Check 'WARN' 'Hardware' 'TPM 2.0' 'Could not query TPM. Valorant (Vanguard) and FACEIT require TPM 2.0.'
+}
 
 # Reported, never failed. Whether the drive should be encrypted is the owner's
 # call, so this states the facts and the consequence rather than grading it. It
